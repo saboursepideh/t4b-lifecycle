@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="An independent, interactive T4B lifecycle systems case study. Explore data, household identity, consent, segmentation, decision rules, and journey orchestration.">
+  <title>T4B Lifecycle Intelligence &amp; Engagement Architecture</title>
+  <style>
+    :root {
+      --bg: #f7f2e9; --surface: #fffdf8; --ink: #221d19; --muted: #6b6459;
+      --line: #ded8cc; --accent: #eea23a; --accent-ink: #70430c; --accent-soft: #fcf0d9;
+      --green: #244c3d; --green-soft: #e9f0e9; --warning: #984f35; --warning-soft: #fcf0e9;
+      --blue: #365574; --blue-soft: #edf1f7; --radius: 18px; --shadow: 0 8px 30px #221d1907;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.6; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+    button { color: inherit; }
+    a { color: var(--green); text-underline-offset: 3px; }
+    button:disabled { cursor: default; opacity: .4; }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    h1, h2, h3 { line-height: 1.2; letter-spacing: -.04em; }
+    h1 { font-size: clamp(28px, 2.9vw, 43px); font-weight: 650; max-width: 780px; margin-bottom: 16px; }
+    h2 { font-size: 28px; }
+    h3 { font-size: 19px; }
+    h4 { font-size: 14px; margin-bottom: 8px; }
+    p { margin-bottom: 14px; }
+    svg { width: 22px; height: 22px; display: inline-block; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .skip { position: absolute; left: 12px; top: -80px; z-index: 100; padding: 12px; background: var(--surface); }
+    .skip:focus { top: 10px; }
+    .topbar { min-height: 76px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 4vw; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brandmark { width: 42px; height: 42px; display: grid; place-items: center; background: var(--ink); color: var(--bg); border-radius: 12px; font-size: 15px; font-weight: 800; letter-spacing: -.08em; }
+    .brand strong { font-size: 14px; display: block; line-height: 1.4; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: 10px; font-weight: 700; color: var(--muted); }
+    .topactions { display: flex; gap: 8px; align-items: center; }
+    .textbtn { border: none; background: none; padding: 10px 13px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .textbtn:hover { background: #221d1908; }
+    .btn { border: 1px solid var(--line); background: var(--surface); padding: 11px 16px; border-radius: 10px; font-size: 12px; font-weight: 600; display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
+    .btn:hover { border-color: var(--muted); }
+    .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .btn.primary:hover { background: #40372d; }
+    .btn svg { width: 16px; height: 16px; }
+    .workspace { display: flex; align-items: flex-start; }
+    .overview { padding: 34px 4vw 20px; width: 100%; min-width: 0; transition: width 200ms ease; }
+    .hero { display: flex; justify-content: space-between; align-items: flex-start; gap: 35px; margin-bottom: 28px; }
+    .hero .eyebrow { color: var(--accent-ink); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .hero .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 15px; margin-bottom: 10px; }
+    .supporting { font-size: 11px; color: var(--muted); }
+    .hero-note { width: 220px; flex: none; border-left: 2px solid var(--accent); padding: 4px 0 0 18px; margin-top: 35px; }
+    .hero-note p { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+    .sectionline { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px; }
+    .sectionline .eyebrow { color: var(--ink); }
+    .hint { font-size: 11px; color: var(--muted); }
+    .flow-wrap { position: relative; padding-right: 26px; }
+    .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px 30px; }
+    .stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); text-align: left; position: relative; min-height: 205px; padding: 22px 24px 18px; display: flex; flex-direction: column; box-shadow: var(--shadow); transition: border-color 180ms, transform 180ms, background 180ms; width: 100%; }
+    .stage:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .stage.selected { border-color: var(--green); background: #f5f9f3; box-shadow: 0 0 0 1px var(--green); }
+    .stage-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .stage-icon { width: 37px; height: 37px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); }
+    .stage:nth-child(2) .stage-icon, .stage:nth-child(5) .stage-icon { background: var(--green-soft); color: var(--green); }
+    .stage:nth-child(3) .stage-icon, .stage:nth-child(6) .stage-icon { background: var(--blue-soft); color: var(--blue); }
+    .stage-number { color: #a79c8e; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .stage-title { font-size: clamp(17px, 1.35vw, 22px); line-height: 1.22; font-weight: 620; letter-spacing: -.025em; margin-bottom: 7px; }
+    .stage-sub { color: var(--muted); font-size: 12px; margin-bottom: 19px; }
+    .stage-bottom { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-top: auto; }
+    .stage-bottom > svg { width: 15px; height: 15px; color: var(--muted); }
+    .badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border-radius: 5px; font-size: 9px; letter-spacing: .03em; font-weight: 650; text-transform: uppercase; background: #eeece7; color: #655e53; line-height: 1.8; white-space: nowrap; }
+    .badge.built { background: var(--green-soft); color: var(--green); }
+    .badge.tested { background: var(--blue-soft); color: var(--blue); }
+    .badge.designed { background: var(--accent-soft); color: var(--accent-ink); }
+    .badge.needs-validation { background: var(--warning-soft); color: var(--warning); }
+    .connector { position: absolute; display: flex; width: 30px; align-items: center; justify-content: center; right: -31px; top: 50%; color: #a99d8c; pointer-events: none; }
+    .connector svg { width: 100%; height: 12px; }
+    .stage[data-stage="4"] { grid-column: 3; grid-row: 2; }
+    .stage[data-stage="5"] { grid-column: 2; grid-row: 2; }
+    .stage[data-stage="6"] { grid-column: 1; grid-row: 2; }
+    .stage[data-stage="4"] .connector, .stage[data-stage="5"] .connector { left: -31px; right: auto; transform: rotate(180deg); }
+    .turn { position: absolute; right: 0; top: 24%; width: 26px; height: 52%; border: 1px solid #a99d8c; border-left: none; border-radius: 0 16px 16px 0; pointer-events: none; }
+    .turn::after { content: ""; position: absolute; bottom: -4px; left: 2px; width: 7px; height: 7px; border-bottom: 1px solid #a99d8c; border-left: 1px solid #a99d8c; transform: rotate(45deg); }
+    .feedback { display: flex; align-items: center; gap: 12px; color: var(--green); font-size: 10px; margin: 14px 26px 14px 0; }
+    .feedback-line { flex: 1; height: 8px; border-bottom: 1px dashed #739684; border-left: 1px dashed #739684; border-right: 1px dashed #739684; position: relative; }
+    .feedback-line::after { content: ""; position: absolute; right: -4px; top: 0; border: 4px solid transparent; border-bottom: 5px solid #739684; }
+    .feedback button { border: none; background: none; color: var(--green); font-size: 10px; padding: 5px; text-align: left; }
+    .governancebar { width: 100%; border: 1px solid var(--line); background: #efeade; border-radius: 11px; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 13px 19px; text-align: left; }
+    .governancebar:hover { border-color: var(--green); }
+    .governancebar .label { display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 600; }
+    .governancebar svg { width: 17px; height: 17px; color: var(--green); }
+    .below { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 26px; }
+    .explore { display: flex; justify-content: space-between; align-items: center; gap: 16px; border: 1px solid var(--line); border-radius: 13px; padding: 18px 20px; background: var(--surface); min-width: 0; }
+    .explore h3 { font-size: 15px; letter-spacing: -.02em; margin: 0 0 4px; }
+    .explore p { margin: 0; font-size: 11px; color: var(--muted); }
+    .evidence { display: flex; gap: 23px; align-items: center; }
+    .evidence-number { font-size: 25px; letter-spacing: -.05em; font-weight: 600; display: block; line-height: 1.3; }
+    .evidence span:not(.evidence-number) { font-size: 10px; color: var(--muted); }
+    .evidence small { display: block; font-size: 9px; color: var(--muted); }
+    .legendline { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 0 18px; margin-top: 5px; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .legend-item { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: #a39c90; }
+    .dot.built { background: var(--green); } .dot.tested { background: var(--blue); } .dot.designed { background: #bc7d20; } .dot.needs-validation { background: var(--warning); }
+    footer { border-top: 1px solid var(--line); padding: 15px 4vw; display: flex; justify-content: space-between; gap: 24px; color: var(--muted); font-size: 9px; }
+    footer p { margin: 0; max-width: 750px; }
+    footer strong { font-weight: 550; flex: none; }
+    .drawer { position: sticky; top: 0; width: 40%; flex: none; height: 100vh; background: var(--surface); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; z-index: 10; }
+    .drawer[hidden] { display: none; }
+    body.has-drawer .overview { width: 60%; padding: 26px 2.5vw 20px; }
+    body.has-drawer .hero-note { display: none; }
+    body.has-drawer h1 { font-size: clamp(25px, 2.3vw, 34px); }
+    body.has-drawer .hero { margin-bottom: 20px; }
+    body.has-drawer .flow { gap: 30px 19px; }
+    body.has-drawer .stage { padding: 17px 14px; min-height: 194px; }
+    body.has-drawer .stage-title { font-size: 16px; }
+    body.has-drawer .stage-sub { font-size: 11px; }
+    body.has-drawer .connector { width: 19px; right: -20px; }
+    body.has-drawer .stage[data-stage="4"] .connector, body.has-drawer .stage[data-stage="5"] .connector { left: -20px; }
+    body.has-drawer .below { grid-template-columns: 1fr; }
+    body.has-drawer .legendline { align-items: flex-start; flex-direction: column; }
+    .drawerhead { padding: 24px 26px 0; flex: none; }
+    .drawer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 10px; }
+    .iconbtn { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--line); background: none; border-radius: 9px; flex: none; }
+    .iconbtn:hover { background: var(--bg); }
+    .iconbtn svg { width: 17px; height: 17px; }
+    .drawerhead h2 { margin-bottom: 10px; font-size: 27px; }
+    #drawer-title:focus { outline: none; }
+    .drawerhead .badges { margin-bottom: 18px; }
+    .tabs { display: flex; border-bottom: 1px solid var(--line); gap: 16px; }
+    .tab { padding: 11px 0; border: none; background: none; font-size: 11px; color: var(--muted); border-bottom: 2px solid transparent; }
+    .tab[aria-selected="true"] { border-color: var(--green); color: var(--green); font-weight: 700; }
+    .drawerbody { padding: 23px 26px 30px; flex: 1; overflow: auto; min-height: 0; overflow-wrap: anywhere; }
+    .drawerfoot { border-top: 1px solid var(--line); padding: 13px 26px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); }
+    .drawerfoot .textbtn { padding: 9px 7px; }
+    .drawerbody > p.lead { color: var(--muted); font-size: 14px; }
+    .detailsection { margin: 26px 0; }
+    .detailsection:first-child { margin-top: 0; }
+    .detailsection h3 { font-size: 16px; margin-bottom: 12px; letter-spacing: -.025em; }
+    .callout { background: var(--accent-soft); border-left: 2px solid var(--accent); padding: 14px 16px; border-radius: 0 9px 9px 0; margin: 18px 0; font-size: 12px; }
+    .callout.safe { background: var(--green-soft); border-color: var(--green); }
+    .callout.warning { background: var(--warning-soft); border-color: var(--warning); }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .callout p:last-child { margin-bottom: 0; }
+    .detailsection p, .detailsection li { font-size: 12px; color: var(--muted); }
+    .detailsection ul { padding-left: 19px; margin: 10px 0; }
+    .detailsection li { margin-bottom: 7px; }
+    .mini-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .tile { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+    .tile p { font-size: 11px; margin-bottom: 0; color: var(--muted); }
+    .tile .big { font-size: 28px; font-weight: 600; letter-spacing: -.04em; display: block; }
+    .tile h4 { margin-bottom: 6px; }
+    .kv { margin: 0; }
+    .kv > div { display: grid; grid-template-columns: 105px minmax(0, 1fr); border-bottom: 1px solid var(--line); padding: 9px 0; gap: 12px; font-size: 11px; }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; }
+    details { border-bottom: 1px solid var(--line); padding: 11px 0; }
+    summary { cursor: pointer; font-size: 12px; font-weight: 600; padding: 5px 2px; }
+    details[open] > summary { margin-bottom: 10px; color: var(--green); }
+    details p { font-size: 12px; color: var(--muted); }
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step { padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); font-size: 12px; position: relative; text-align: left; }
+    .step strong { display: block; margin-bottom: 3px; }
+    .step small { color: var(--muted); font-size: 10px; }
+    .step:not(:last-child) { margin-bottom: 23px; }
+    .step:not(:last-child)::after { content: "↓"; position: absolute; bottom: -23px; left: 50%; color: #9a907f; font-size: 14px; }
+    .step.action { cursor: pointer; }
+    .step.action:hover, .step.action.active { border-color: var(--green); background: var(--green-soft); }
+    .step .badges { margin-top: 5px; }
+    .branches { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; position: relative; margin: 13px 0; padding-top: 15px; border-top: 1px solid var(--line); }
+    .branches::before { content: ""; height: 14px; border-left: 1px solid var(--line); position: absolute; top: -15px; left: 50%; }
+    .branch { padding: 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 11px; background: var(--bg); text-align: left; position: relative; }
+    .branch::before { content: "↓"; position: absolute; top: -22px; left: 50%; color: #9a907f; }
+    .branch:hover, .branch.active { border-color: var(--green); background: var(--green-soft); }
+    .branch strong { display: block; }
+    .crosslink { border: none; background: none; color: var(--green); font-size: 12px; text-align: left; padding: 7px 0; display: block; text-decoration: underline; text-underline-offset: 4px; }
+    .search { width: 100%; border: 1px solid var(--line); padding: 11px 13px; border-radius: 9px; background: var(--surface); margin: 8px 0 14px; }
+    .fieldcount { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+    .field summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .field summary::after { content: "+"; font-weight: 400; }
+    .field[open] summary::after { content: "−"; }
+    .field .kv { margin-bottom: 10px; }
+    .pillset { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+    .pill { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: none; text-align: left; font-size: 11px; min-height: 36px; }
+    .pill[aria-pressed="true"] { color: var(--green); background: var(--green-soft); border-color: var(--green); font-weight: 650; }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; background: #eee9df; border-radius: 4px; padding: 2px 4px; font-size: 10px; overflow-wrap: anywhere; white-space: normal; }
+    .rule { display: block; padding: 12px; font-size: 11px; line-height: 1.8; }
+    .inputrow { display: flex; flex-direction: column; gap: 5px; margin-bottom: 13px; }
+    .inputrow label, .checkrow { font-size: 12px; }
+    .inputrow select { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--surface); color: var(--ink); width: 100%; }
+    .checkrow { display: flex; align-items: flex-start; gap: 10px; margin: 12px 0; }
+    input[type="checkbox"] { accent-color: var(--green); margin-top: 4px; width: 16px; height: 16px; flex: none; }
+    .simulation-label { display: inline-flex; align-items: center; gap: 6px; color: var(--blue); background: var(--blue-soft); padding: 5px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 16px; }
+    .trail { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin: 18px 0; }
+    .trail button { border: 1px solid var(--line); background: var(--bg); padding: 8px 0; border-radius: 6px; font-size: 11px; }
+    .trail button[aria-pressed="true"] { background: var(--green); color: white; border-color: var(--green); }
+    .result { border: 1px solid #b5c9bb; border-radius: 12px; background: var(--green-soft); padding: 17px; margin-top: 18px; }
+    .result.hold { border-color: #dec1b1; background: var(--warning-soft); }
+    .result .eyebrow { margin-bottom: 9px; color: var(--green); }
+    .result.hold .eyebrow { color: var(--warning); }
+    .result h3 { margin-bottom: 9px; }
+    .result p { font-size: 12px; margin-bottom: 0; }
+    .state-description { margin-top: 15px; }
+    .state-transitions { display: flex; flex-direction: column; gap: 9px; margin: 18px 0; }
+    .state-transitions button { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); text-align: left; padding: 10px 12px; font-size: 11px; }
+    .state-transitions button:hover { border-color: var(--green); }
+    .metric { border-bottom: 1px solid var(--line); padding: 10px 0; font-size: 12px; }
+    .metric span { display: block; font-size: 10px; color: var(--muted); }
+    .timeline { border-left: 1px solid var(--line); padding-left: 21px; margin-left: 5px; }
+    .milestone { position: relative; padding-bottom: 24px; }
+    .milestone::before { content: ""; position: absolute; left: -26px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--surface); }
+    .milestone:last-child { padding-bottom: 0; }
+    .milestone .badges { margin: 9px 0; }
+    .empty { font-size: 12px; color: var(--muted); padding: 20px 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (min-width: 1600px) { .overview { padding-top: 44px; } .stage { min-height: 240px; padding: 26px 30px; } .stage-top { margin-bottom: 28px; } .hero { margin-bottom: 36px; } }
+    @media (max-width: 1100px) {
+      .hero-note { display: none; }
+      body.has-drawer .drawer { width: 42%; }
+      body.has-drawer .overview { width: 58%; }
+      body.has-drawer .flow { gap: 27px 15px; }
+      body.has-drawer .stage { padding: 13px 10px; min-height: 208px; }
+      body.has-drawer .stage-title { font-size: 14px; }
+      body.has-drawer .stage-top { margin-bottom: 13px; }
+      body.has-drawer .stage-bottom .badge { font-size: 8px; padding: 2px 5px; }
+      body.has-drawer .connector { width: 15px; right: -16px; }
+      body.has-drawer .stage[data-stage="4"] .connector, body.has-drawer .stage[data-stage="5"] .connector { left: -16px; }
+      .below { grid-template-columns: 1fr; }
+      .drawerhead, .drawerbody { padding-left: 20px; padding-right: 20px; }
+      .drawerfoot { padding-left: 15px; padding-right: 15px; }
+      footer strong { flex: 1; }
+      footer p { flex: 2; }
+    }
+    @media (max-width: 760px) {
+      .topbar { padding: 13px 20px; min-height: 68px; }
+      .brand strong { font-size: 12px; }
+      .brand .eyebrow { font-size: 8px; }
+      .topactions .textbtn { padding: 9px 5px; font-size: 10px; }
+      .topactions .printbtn { display: none; }
+      .overview { padding: 26px 20px 12px; }
+      .hero { margin-bottom: 25px; }
+      h1 { font-size: 31px; }
+      .subtitle { font-size: 13px; }
+      .supporting { font-size: 10px; }
+      .flow-wrap { padding-right: 0; }
+      .flow { grid-template-columns: 1fr; gap: 26px; }
+      .stage { min-height: 158px; padding: 20px; }
+      .stage-top { margin-bottom: 12px; }
+      .stage-title { font-size: 20px; }
+      .stage-sub { margin-bottom: 13px; }
+      .stage[data-stage] { grid-column: auto; grid-row: auto; }
+      .stage .connector, .stage[data-stage="4"] .connector, .stage[data-stage="5"] .connector { top: auto; bottom: -26px; right: auto; left: calc(50% - 13px); width: 26px; height: 26px; transform: rotate(90deg); }
+      .turn { display: none; }
+      .feedback { margin-right: 0; }
+      .governancebar { padding: 13px; }
+      .governancebar .hint { display: none; }
+      .governancebar .label { font-size: 11px; }
+      .below { margin-top: 18px; }
+      .explore { padding: 15px; }
+      .explore .btn { padding: 9px 11px; }
+      .evidence { gap: 24px; }
+      .legendline { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .legend { gap: 10px; }
+      footer { flex-direction: column; padding: 15px 20px; gap: 6px; }
+      body.has-drawer .overview { width: 100%; }
+      body.has-drawer .drawer { position: fixed; inset: 0; width: 100%; height: 100dvh; border-left: none; }
+      body.has-drawer { overflow: hidden; }
+      .drawerhead { padding-top: 18px; }
+      .drawerhead h2 { font-size: 26px; }
+      .drawerhead .badges { margin-bottom: 10px; }
+      .drawerfoot { padding-bottom: max(13px, env(safe-area-inset-bottom)); }
+      .tab { font-size: 12px; min-height: 44px; }
+      .pill { min-height: 44px; }
+      .iconbtn { width: 44px; height: 44px; }
+      .crosslink, .textbtn { min-height: 44px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+    @media (max-width: 480px) {
+      .topbar { flex-wrap: wrap; row-gap: 8px; }
+      .brandmark { flex: none; }
+      .topactions { width: 100%; justify-content: space-between; }
+      .explore { flex-wrap: wrap; gap: 10px; }
+      .below { grid-template-columns: minmax(0, 1fr); }
+      .evidence { width: 100%; justify-content: space-between; gap: 12px; }
+      .explore > div { min-width: 0; }
+      .explore .eyebrow + small { display: inline; margin-left: 8px; }
+    }
+    @media (min-width: 1101px) and (max-height: 850px) {
+      .topbar { min-height: 66px; padding-top: 10px; padding-bottom: 10px; }
+      .overview { padding-top: 24px; }
+      .hero { margin-bottom: 18px; }
+      .hero > div { width: 100%; }
+      .hero-note { display: none; }
+      .hero .eyebrow { margin-bottom: 12px; }
+      h1 { font-size: 33px; max-width: none; margin-bottom: 12px; }
+      h1 br { display: none; }
+      .flow { row-gap: 28px; }
+      .stage { min-height: 172px; padding: 18px 22px; }
+      .stage-top { margin-bottom: 14px; }
+      .stage-icon { width: 32px; height: 32px; }
+      .stage-title { font-size: 19px; }
+      .stage-sub { margin-bottom: 12px; }
+    }
+    @media print {
+      @page { size: landscape; margin: 12mm; }
+      body { background: white; font-size: 10px; overflow: visible !important; }
+      .topactions, .drawer, .below, .skip, .hint, .stage-bottom > svg { display: none !important; }
+      .overview, body.has-drawer .overview { width: 100% !important; padding: 20px 0; }
+      .topbar { padding: 0 0 12px; min-height: 45px; }
+      .hero { margin-bottom: 16px; }
+      h1, body.has-drawer h1 { font-size: 27px; }
+      .flow, body.has-drawer .flow { grid-template-columns: repeat(3, 1fr); gap: 30px; }
+      .stage, body.has-drawer .stage { padding: 15px; min-height: 135px; break-inside: avoid; box-shadow: none; background: white; color: black; }
+      .stage[data-stage="4"] { grid-column: 3; grid-row: 2; }
+      .stage[data-stage="5"] { grid-column: 2; grid-row: 2; }
+      .stage[data-stage="6"] { grid-column: 1; grid-row: 2; }
+      .stage .connector, body.has-drawer .stage .connector { top: 50%; bottom: auto; left: auto; right: -31px; width: 30px; height: 12px; transform: none; }
+      .stage[data-stage="4"] .connector, .stage[data-stage="5"] .connector, body.has-drawer .stage[data-stage="4"] .connector, body.has-drawer .stage[data-stage="5"] .connector { left: -31px; right: auto; transform: rotate(180deg); }
+      .stage-top { margin-bottom: 8px; }
+      .stage-title { font-size: 16px; }
+      .stage-sub { font-size: 10px; margin-bottom: 10px; }
+      .turn { display: block; }
+      .legendline { padding: 10px 0; }
+      footer { padding: 10px 0; }
+      .brandmark, .badge, .stage-icon, .governancebar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#architecture">Skip to the operating architecture</a>
+  <header class="topbar">
+    <div class="brand"><div class="brandmark" aria-hidden="true">T4B</div><div><strong>Lifecycle Intelligence</strong><span class="eyebrow">An independent systems case study</span></div></div>
+    <nav class="topactions" aria-label="Case study tools">
+      <button class="textbtn" data-panel="context">Project context</button>
+      <button class="textbtn" data-panel="maturity">Architecture evolution <span aria-hidden="true">↗</span></button>
+      <button class="iconbtn printbtn" data-print aria-label="Print architecture overview"><svg viewBox="0 0 24 24"><path d="M7 8V3h10v5M7 17H4v-8h16v8h-3M7 14h10v7H7zM17 11h.01"/></svg></button>
+    </nav>
+  </header>
+  <div class="workspace">
+    <main class="overview" id="main">
+      <section class="hero" aria-labelledby="title">
+        <div>
+          <div class="eyebrow">Interactive systems case study</div>
+          <h1 id="title">T4B Lifecycle Intelligence<br> &amp; Engagement Architecture</h1>
+          <p class="subtitle">From Fragmented Contact Data to Governed, Personalized Engagement</p>
+          <div class="supporting">Zoho Campaigns &nbsp; | &nbsp; CRM Data Architecture &nbsp; | &nbsp; Lifecycle Orchestration</div>
+        </div>
+        <aside class="hero-note"><span class="eyebrow">The central principle</span><p>One governed contact foundation. Multiple audience journeys. Human judgment, by design.</p></aside>
+      </section>
+      <section id="architecture" tabindex="-1" aria-label="Six-stage lifecycle operating architecture">
+        <div class="sectionline"><span class="eyebrow">The operating architecture</span><span class="hint">Select a stage to explore the system <span aria-hidden="true">↘</span></span></div>
+        <div class="flow-wrap"><div class="flow" id="flow"></div><div class="turn" aria-hidden="true"></div></div>
+        <div class="feedback"><span class="feedback-line" aria-hidden="true"></span><button data-stage-link="6">Evidence informs definitions, decisions &amp; journeys <span aria-hidden="true">↺</span></button></div>
+        <button class="governancebar" data-panel="governance"><span class="label"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6zM8 12l3 3 5-6"/></svg>Governance, Privacy &amp; Operational Safeguards</span><span class="hint">A foundation across every stage</span><span aria-hidden="true">↗</span></button>
+      </section>
+      <div class="below">
+        <section class="explore"><div><h3>Explore a Customer Journey</h3><p>Follow a synthetic persona through the architecture.</p></div><button class="btn primary" data-panel="scenario">Explore <span aria-hidden="true">→</span></button></section>
+        <section class="explore" aria-label="Historical data preparation results"><div class="evidence"><div><span class="evidence-number">723</span><span>Raw rows</span></div><div><span class="evidence-number">403</span><span>Cleaned records</span></div><div><span class="evidence-number">320</span><span>Duplicates removed</span></div></div><div><span class="eyebrow">Preparation</span><small class="hint">Not production metrics</small></div></section>
+      </div>
+      <div class="legendline"><div class="legend" aria-label="Implementation status legend" id="legend"></div><button class="textbtn" data-panel="status">What is actually implemented? <span aria-hidden="true">↗</span></button></div>
+    </main>
+    <aside class="drawer" id="drawer" hidden aria-labelledby="drawer-title" tabindex="-1">
+      <div class="drawerhead" id="drawerhead"></div>
+      <div class="drawerbody" id="drawerbody"></div>
+      <div class="drawerfoot" id="drawerfoot"></div>
+    </aside>
+  </div>
+  <footer><strong>T4B Lifecycle Intelligence &amp; Engagement Architecture</strong><p>Independent project case study based on CRM data architecture, audience segmentation, and lifecycle design work for Thrive-4-Blacks. Implemented, tested, designed, and roadmap components are distinguished throughout. Synthetic examples are used for demonstration.</p></footer>
+  <div class="sr-only" role="status" aria-live="polite" id="announcement"></div>
+  <script>
+    "use strict";
+    const icons = {
+      data: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M10 10v10M7 7h.01M10 7h.01"/>',
+      identity: '<circle cx="9" cy="8" r="3"/><path d="M3 19v-2a6 6 0 0 1 10-4M16 10l5 2v4c0 3-5 5-5 5s-5-2-5-5v-4z"/>',
+      audience: '<circle cx="12" cy="7" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3M4 7a3 3 0 0 0 0 6M20 7a3 3 0 0 1 0 6M2 21v-3a5 5 0 0 1 2-4M22 21v-3a5 5 0 0 0-2-4"/>',
+      decision: '<path d="M12 2l7 6-7 6-7-6zM12 14v4M4 22v-4h16v4M4 22h.01M20 22h.01"/>',
+      journey: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M10 6h7v8M14 11l3 3 3-3M6 10v7h8"/>',
+      measurement: '<path d="M4 3v17h17M8 15l4-5 4 2 5-7M17 5h4v4"/>',
+      arrow: '<path d="M2 6h25M23 2l4 4-4 4"/>',
+      right: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+      close: '<path d="M6 6l12 12M6 18L18 6"/>'
+    };
+    const svg = (name, view = "0 0 24 24") => `<svg viewBox="${view}" aria-hidden="true">${icons[name]}</svg>`;
+    const statuses = ["Built", "Tested", "Designed", "Roadmap", "Needs Validation"];
+    const esc = value => String(value).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+    const badge = status => `<span class="badge ${status.toLowerCase().replaceAll(" ", "-")}">${esc(status)}</span>`;
+    const badges = values => `<div class="badges">${values.map(badge).join("")}</div>`;
+    const section = (title, body) => `<section class="detailsection"><h3>${title}</h3>${body}</section>`;
+    const callout = (title, body, tone = "") => `<div class="callout ${tone}"><strong>${title}</strong>${body}</div>`;
+    const list = values => `<ul>${values.map(v => `<li>${v}</li>`).join("")}</ul>`;
+    const kv = entries => `<dl class="kv">${entries.map(([key, value]) => `<div><dt>${key}</dt><dd>${value}</dd></div>`).join("")}</dl>`;
+    const link = (id, text, tab = "executive") => `<button class="crosslink" data-stage-link="${id}" data-tab="${tab}">${text} →</button>`;
+    const steps = values => `<div class="steps">${values.map(value => `<div class="step">${value}</div>`).join("")}</div>`;
+    const disclosure = (title, body) => `<details><summary>${title}</summary>${body}</details>`;
+    const stages = [
+      { id: 1, name: "Data Foundation", sub: "Clean, consolidate, structure.", icon: "data", status: ["Built"], summary: "Turn fragmented historical contact records into a standardized, usable foundation. Preserve source evidence, resolve duplicates, and make missing information explicit before controlled import.", value: "A reliable foundation makes relevance possible. A clean dataset is an input to the system, not proof of a successful production import." },
+      { id: 2, name: "Identity & Consent", sub: "Recognize relationships and permissions.", icon: "identity", status: ["Built", "Designed"], summary: "Recognize that a campaign contact may represent a household, not an individual. Separate email identity, relationship roles, and purpose-specific permissions before deciding which actions are safe.", value: "A parent and a child can share one email address. Treating them as two independent campaign identities risks collision, incorrect targeting, and inappropriate communication." },
+      { id: 3, name: "Audience Intelligence", sub: "Classify, segment, understand.", icon: "audience", status: ["Built"], summary: "Use structured attributes and rule-based segments to support distinct needs across youth and parents, supporters, and institutional partners.", value: "A parent seeks an appropriate program. A donor seeks evidence of impact. A school seeks a referral relationship. One newsletter cannot meet all three needs." },
+      { id: 4, name: "Decision Logic", sub: "Determine eligibility and next action.", icon: "decision", status: ["Designed"], summary: "Apply restrictions first, then interpret intent, relationship maturity, and engagement evidence to determine a relevant next action.", value: "Segmentation identifies who the contact is. Decisioning determines what should happen next. A high-value segment must never bypass a permission restriction." },
+      { id: 5, name: "Journey Orchestration", sub: "Automate engagement and coordinate people.", icon: "journey", status: ["Built", "Tested", "Designed"], summary: "Connect permission-aware welcome, nurture, and human follow-up into repeatable journeys. A welcome email was received in testing; full sequence activation and production performance are not established.", value: "Automate repeatable communication where appropriate. Keep guardian ambiguity, volunteer coordination, and institutional partnership decisions under human control." },
+      { id: 6, name: "Measurement & Optimization", sub: "Learn, improve, and govern performance.", icon: "measurement", status: ["Designed", "Roadmap"], summary: "Measure data health, journey effectiveness, and mission outcomes separately. Use evidence to refine definitions, rules, timing, and human follow-up.", value: "Sending an email is not the same as participation. Mission outcomes require verified operational evidence, often beyond Zoho Campaigns." }
+    ];
+    const fields = [
+      ["Audience Type", "Pick List", "Youth, Parent, Donor, Volunteer, Partner, General Subscriber", "Primary audience categorization; cannot encode all simultaneous roles.", "All", "Persona routing and the seven configured segments", "Built"],
+      ["Lifecycle Stage", "Pick List", "New, Nurturing, Active, Dormant, Advocate", "Relationship maturity, not persona or campaign membership.", "All", "Nurture, retention, and proposed state transitions", "Built"],
+      ["Interest Area", "Multiselect", "Programs, Volunteering, Donation, Partnership, Events", "Cross-persona interest classification.", "All", "Relevant content and multi-interest decisions", "Built"],
+      ["Age Group", "Pick List", "Under 18, 18+, Unknown, Not Applicable", "Identify whether age-related review is needed; Unknown is not adult.", "Youth & Parents", "Under 18 segment and consent review", "Built"],
+      ["Parent Consent Status", "Pick List", "Not Required, Required, Sent, Received, Missing", "Record consent-related state. Received is not automatically verified consent.", "Youth & Parents", "Guardian review and restricted-action gating", "Built"],
+      ["Source Category", "Pick List", "Website, Event, Referral, Partner, Social, Manual Import, Donation Platform, Unknown", "Controlled acquisition-source classification.", "All", "Source reporting and appropriate welcome context", "Built"],
+      ["Source Name", "Text", "Known campaign, event, or referral name", "Preserve specific acquisition provenance.", "All", "Contextual communication and traceability", "Built"],
+      ["Source Date", "Date", "Known acquisition date", "Capture a source date only when supported by evidence.", "All", "Source chronology and cohort analysis", "Built"],
+      ["Program Interest", "Multiselect", "Mentorship, Workshop, Youth Program, Career Support, Community Support", "Express program preferences without inventing participation.", "Youth & Parents", "Program discovery and suitable next steps", "Built"],
+      ["Volunteer Interest", "Multiselect", "Mentorship, Event Support, Admin Support, Fundraising, Outreach, Workshop Support", "Express role preferences, not approved volunteer eligibility.", "Supporters", "Volunteer information and human coordination", "Built"],
+      ["Partner Type", "Pick List", "Government, School, Nonprofit, Corporate, Funder, Community Organization", "Classify institutional relationships.", "Partners", "Partnership review and human routing", "Built"],
+      ["Preferred Contact Method", "Configured preference field", "Exact allowed options need verification", "Support appropriate human outreach; preference does not establish permission.", "All", "Human follow-up method selection", "Built"],
+      ["Last Key Action", "Text", "An evidenced, meaningful interaction", "Record meaningful contact activity for follow-up or basic reporting.", "All", "Human review and engagement interpretation", "Built"],
+      ["Human Follow-up Needed", "Checkbox", "Checked / Unchecked", "Checked flags review. Unchecked only means no active flag is recorded, not that no issue exists.", "All", "SEG - Human Follow Up Needed", "Built"],
+      ["Household/Family ID", "Text", "A controlled family identifier", "Group household information; not a functioning relational household database.", "Youth & Parents; multi-role households", "Shared-email review and relationship context", "Built"],
+      ["Primary Contact Role", "Pick List", "Youth, Parent/Guardian, Family Contact, Other", "Describe the role associated with the communication record.", "Youth & Parents", "Guardian identification and household-aware routing", "Built"],
+      ["Household Includes", "Multiselect", "Youth, Parent/Guardian, Donor, Volunteer, Partner, General Subscriber", "Describe household composition; not person-level permission for every member.", "Households", "Revised consent rule and multi-role context", "Built"]
+    ].map(([name, type, values, purpose, persona, dependency, status]) => ({ name, type, values, purpose, persona, dependency, status }));
+    const extended = [
+      ["Email", "Standard identifier", "Unique campaign email identity; not guaranteed individual identity.", "Needs Validation"],
+      ["First Name", "Standard contact attribute", "Preserve meaningful original names; import mapping unverified.", "Needs Validation"],
+      ["Last Name", "Standard contact attribute", "Preserve meaningful original names; import mapping unverified.", "Needs Validation"],
+      ["Phone", "Prepared import column", "Contact detail, subject to purpose and access controls.", "Designed"],
+      ["Organization", "Prepared import column", "Institutional context; do not infer from email alone.", "Designed"],
+      ["Job Title", "Prepared import column", "Known professional role, not inferred seniority.", "Designed"],
+      ["City", "Prepared import column", "Known locality; no demographic inference.", "Designed"],
+      ["Province", "Prepared import column", "Known province; controlled geographic values.", "Designed"],
+      ["Source Code", "Prepared import column", "Defined in the import model; production custom-field configuration not established.", "Designed"],
+      ["Original List Name", "Prepared import column", "Retain originating list provenance.", "Designed"],
+      ["Source Detail", "Prepared import column", "Additional known acquisition context.", "Designed"],
+      ["Consent to Email", "Prepared import column", "Marketing permission evidence must be validated, not inferred from list presence.", "Designed"],
+      ["Consent Date", "Prepared import column", "Known evidence date; no invented dates.", "Designed"],
+      ["Parent/Guardian Name", "Proposed extension", "Verified guardian relationship information, minimized to purpose.", "Roadmap"],
+      ["Parent/Guardian Email", "Proposed extension", "Verified guardian contact, not automatic authorization.", "Roadmap"],
+      ["Volunteer Availability", "Prepared / proposed extension", "Availability for human coordination; production field not established.", "Designed"],
+      ["Donation Status", "Prepared / proposed extension", "Require transaction evidence; supporter membership is not proof of donation.", "Designed"],
+      ["Follow-up Reason", "Prepared / proposed extension", "Explicit review context for manual routing.", "Designed"],
+      ["Notes", "Prepared import column", "Avoid unnecessary sensitive or child-specific information.", "Designed"],
+      ["Consent Captured Date", "Proposed consent extension", "Date of captured authorization evidence.", "Roadmap"],
+      ["Consent Source", "Proposed consent extension", "Provenance of authorization evidence.", "Roadmap"],
+      ["Consent Verification Reference", "Proposed consent extension", "Controlled reference to verified evidence.", "Roadmap"],
+      ["Consent Purpose", "Proposed consent extension", "Specific scope of permitted activity.", "Roadmap"],
+      ["Consent Expiry/Review Date", "Proposed consent extension", "Purpose-appropriate review where applicable.", "Roadmap"]
+    ].map(([name, type, purpose, status]) => ({ name, type, purpose, status }));
+    const segments = [
+      { name: "SEG - Youth and Parents", rule: "Audience Type = Youth OR Audience Type = Parent", why: "Program discovery and guardian engagement.", workflow: 0 },
+      { name: "SEG - Volunteers", rule: "Audience Type = Volunteer", why: "Role-specific information and human coordination.", workflow: 2 },
+      { name: "SEG - Partners", rule: "Audience Type = Partner", why: "Institutional inquiry and human partnership review.", workflow: 4 },
+      { name: "SEG - Donors and Supporters", rule: "Audience Type = Donor OR Audience Type = General Subscriber", why: "Supporter relevance. Membership does not establish a donation.", workflow: 3 },
+      { name: "SEG - Under 18 Youth", rule: "Audience Type = Youth AND Age Group = Under 18", why: "Identify individual-centric minor review candidates.", workflow: 1 },
+      { name: "SEG - Parent Consent Needed", rule: "Audience Type = Youth AND Age Group = Under 18 AND Parent Consent Status = Required", why: "Original individual-centric consent review segment.", workflow: 1 },
+      { name: "SEG - Human Follow Up Needed", rule: "Human Follow-up Needed = true", why: "Review candidates, not a verified native CRM task queue.", workflow: 5 }
+    ];
+    const proposedSegments = ["New Leads / New Contacts", "Engaged but Not Converted", "Active Program Participants", "Volunteer Applicants Awaiting Review", "Active Volunteers", "First-Time Donors", "Repeat Donors", "Partner Inquiries Awaiting Follow-Up", "Dormant Contacts", "Re-engagement Eligible", "Incomplete Profile / Enrichment Needed", "Consent Review Required", "Unsubscribed / Suppressed"];
+    const personas = [
+      { name: "Youth & Parents", members: "Youth, Parent/Guardian, Family Contact", purpose: "Discover a suitable program, register interest, verify guardian requirements, participate, and stay engaged.", journey: ["Program discovery", "Interest registration", "Permission & guardian review", "Appropriate program information", "Verified participation", "Continued engagement"], scenario: 0 },
+      { name: "Supporters", members: "Donors, Volunteers, Mentors, Event Supporters, General Subscribers", purpose: "Contribute time, expertise, or resources through relevant opportunities, then build a sustained relationship.", journey: ["Contribution interest", "Preference & evidence review", "Relevant opportunity", "Human onboarding where needed", "Verified contribution", "Retention & advocacy"], scenario: 2 },
+      { name: "Partners", members: "Schools, Government, Nonprofits, Businesses, Funders, Community Organizations", purpose: "Develop referral, co-delivery, sponsorship, and institutional collaboration through human judgment.", journey: ["Partnership inquiry", "Organization classification", "Team review", "Discovery discussion", "Collaboration evaluation", "Partnership or nurture"], scenario: 3 }
+    ];
+    const node = (title, status, detail) => ({ title, status, detail });
+    const workflows = [
+      {
+        name: "Youth & Parent Welcome", short: "Welcome", status: ["Built", "Tested", "Designed"], objective: "Acknowledge program interest and support an appropriate next step.",
+        audience: "Youth and parents with appropriate communication permission.",
+        trigger: "Contact enters SEG - Youth and Parents; new qualifying entrants, not indiscriminate existing-contact enrollment.",
+        fields: "Audience Type, Program Interest, Age Group, Parent Consent Status, Household Includes, communication permission.",
+        entry: "Relevant segment membership plus permission and consent eligibility. Verify exact trigger behavior in controlled tests.",
+        exclusions: "Unsubscribed, invalid or suppressed identities; actions requiring unverified guardian authorization.",
+        exit: "Relevant objective met, permission withdrawn, suppression, or human review requires a hold.",
+        reenroll: "No automatic repeat welcome assumed. Define explicit exclusion and repeat-entry controls before activation.",
+        measure: "Welcome delivery, relevant program CTA clicks, inquiries, and follow-up resolution; proposed beyond the observed test.",
+        platform: "Welcome receipt verified. Workflow activation, all waits, later messages, repeat-entry behavior, and automated updates need validation in Zoho Campaigns.",
+        nodes: [
+          node("Eligibility gate", ["Designed"], "Improved architecture: screen relevant permissions before communication. Original segment-entry welcome must be refined and validated; consent must not be added as an afterthought."),
+          node("EMAIL 1 - Youth Parent Welcome", ["Built", "Tested"], "Subject: Welcome to Thrive 4 Blacks. Preheader: Thanks for your interest. Here's what happens next. CTA: Explore Programs. This initial email was successfully received in testing."),
+          node("Wait 2 days", ["Designed"], "Designed interval before program-support and trust-building communication; this delay has not been confirmed tested."),
+          node("Program support & trust", ["Designed"], "Explain program relevance and build trust without asserting participation or permission."),
+          node("Wait 3 days → program discovery", ["Designed"], "Offer relevant program choices and suitable next steps. Confirm branch eligibility and frequency before activation."),
+          node("Wait 4 days → invite questions", ["Designed"], "Offer help choosing a program. Do not send restricted child-specific communications without the relevant permission."),
+          node("Evaluate next journey / human help", ["Designed"], "Review expressed intent, meaningful actions, and unresolved questions. A welcome delivery alone does not make the relationship Active.")
+        ],
+        branchQuestion: "Does the contact remain eligible?",
+        branches: [["Eligible + interested", "Continue relevant program information; validate entry and frequency controls."], ["Restricted / unresolved", "Hold affected actions and use appropriate guardian or human review."]]
+      },
+      {
+        name: "Guardian Consent", short: "Guardian consent", status: ["Designed", "Needs Validation"], objective: "Resolve authorization ambiguity while restricting affected child-specific actions.",
+        audience: "Records involving minor participation or ambiguous household consent.",
+        trigger: "Qualifies for consent review; household-aware revision is not universally validated production logic.",
+        fields: "Age Group, Parent Consent Status, Primary Contact Role, Household Includes, Household/Family ID, Human Follow-up Needed.",
+        entry: "Minor-related requirement evaluated; identify the appropriate guardian and check specific authorization evidence.",
+        exclusions: "No assumption that marketing permission, household membership, or a Received value establishes guardian authorization.",
+        exit: "Verified evidence permits scoped activity; refusal or withdrawal preserves restrictions; ambiguity remains in human review.",
+        reenroll: "Only on a material permission change or approved review event; no endless reminders.",
+        measure: "Resolution time, unresolved review count, withdrawals, and review completion; proposed.",
+        platform: "Automatic field updates and task creation need validation. If unsupported, an authorized person reviews evidence and manually updates status; no silent automated fallback.",
+        nodes: [
+          node("Minor participation involved?", ["Designed"], "Determine the activity and whether a minor-related requirement applies. Unknown age or ambiguous household identity is a review condition."),
+          node("Identify guardian & verify scope", ["Designed"], "Establish the appropriate guardian identity, permission purpose, and trustworthy evidence."),
+          node("Day 0: approved request", ["Designed"], "Only initiate guardian outreach if that outreach is itself permitted. Restrict affected child-specific activity."),
+          node("Day 3: unresolved reminder", ["Designed"], "Reminder only if the requirement remains unresolved and additional outreach is permitted."),
+          node("Day 7: human review", ["Designed"], "Route unresolved cases to a manual review process. An unanswered request is never consent."),
+          node("Record verified outcome", ["Needs Validation"], "Automatic update capability is unverified. Manual authorized verification and controlled field updates are the fallback.")
+        ],
+        branchQuestion: "Is relevant consent verified?",
+        branches: [["Verified", "Update the verified evidence through an approved process, then evaluate only permitted journeys."], ["Pending / refused / ambiguous", "Preserve the restriction. Review manually; stop affected actions after refusal or withdrawal."]]
+      },
+      {
+        name: "Volunteer Onboarding", short: "Volunteer", status: ["Designed", "Roadmap"], objective: "Convert expressed volunteer interest into a coordinated, appropriate contribution.",
+        audience: "Prospective volunteers and mentors.",
+        trigger: "SEG - Volunteers or an approved volunteer-interest form; reliable form integration is not confirmed.",
+        fields: "Audience Type, Volunteer Interest, Preferred Contact Method, Lifecycle Stage, Human Follow-up Needed.",
+        entry: "Permitted communication and explicit volunteer intent; role, eligibility, and availability need human review.",
+        exclusions: "Permission restrictions, duplicate enrollment, unresolved safeguarding requirements, or missing critical details.",
+        exit: "Onboarding outcome recorded, withdrawal, hold, or appropriate retention journey.",
+        reenroll: "A new role or approved reapplication may justify review; do not restart onboarding on every field change.",
+        measure: "Interest-to-review progression, coordination completion, verified activation, and retention; proposed.",
+        platform: "No claim that volunteer eligibility, screening, onboarding, task assignment, or field updates are automated.",
+        nodes: [
+          node("Interest captured", ["Designed"], "Capture explicit interest through an approved channel; retain source context."),
+          node("Role preference identified", ["Designed"], "Use Volunteer Interest to distinguish mentorship, event support, admin, fundraising, outreach, and workshop support."),
+          node("Eligibility / availability review", ["Roadmap"], "Human screening and coordination. Availability is an extended model element, not a confirmed live field."),
+          node("Volunteer information", ["Designed"], "Send permission-appropriate expectations and role-specific information."),
+          node("Human coordination → onboarding", ["Roadmap"], "A team member reviews fit, practical requirements, and next steps; no automated approval claim."),
+          node("Active participation → retention", ["Roadmap"], "Use verified participation to inform relationship state and continued opportunities.")
+        ],
+        branchQuestion: "Is the application ready for coordination?",
+        branches: [["Sufficient information", "Coordinate the appropriate role and record a verified onboarding outcome."], ["Missing / restricted", "Request permitted enrichment or place in manual review; do not mark as approved."]]
+      },
+      {
+        name: "Donor & Supporter Engagement", short: "Supporter", status: ["Designed", "Roadmap"], objective: "Build mission understanding and relevant contribution without inventing donation evidence.",
+        audience: "Donors, general subscribers, and other supporters with validated permissions.",
+        trigger: "SEG - Donors and Supporters or an approved donation/source event if reliable data becomes available.",
+        fields: "Audience Type, Interest Area, Source Category, Source Name, Lifecycle Stage; Donation Status is extended/unverified.",
+        entry: "Permitted supporter communication. Transaction-dependent branches require independently validated donation evidence.",
+        exclusions: "Unsubscribed/suppressed records, unsupported donor assumptions, conflicting volunteer or donor enrollment.",
+        exit: "Relevant contribution or advocacy milestone verified, withdrawal, hold, or retention transition.",
+        reenroll: "Control repeat asks and overlapping interests; transaction-driven entry depends on approved event integration.",
+        measure: "Relevant clicks, verified contribution, repeat participation, and donor retention; no achieved revenue or lift claim.",
+        platform: "Donation transaction integration and automated donor-state updates are not confirmed.",
+        nodes: [
+          node("Supporter identified", ["Designed"], "A General Subscriber is not necessarily a donor. Keep known audience and transaction evidence separate."),
+          node("Welcome → mission & impact", ["Designed"], "Explain the mission and appropriate ways to participate, without fictional impact results."),
+          node("Validate contribution evidence", ["Roadmap"], "Use reliable external transaction evidence before first-time or repeat-donor routing."),
+          node("Relevant contribution opportunity", ["Designed"], "Respect Donation + Volunteering interests without repetitive or conflicting enrollment."),
+          node("Engagement → retention", ["Roadmap"], "Measure meaningful contribution and sustained relationships."),
+          node("Advocacy", ["Roadmap"], "A verified referral or advocacy milestone may support an Advocate state; not an automatic email-based promotion.")
+        ],
+        branchQuestion: "What contribution evidence exists?",
+        branches: [["Confirmed donor", "Consider first-time versus repeat-donor content only with reliable transaction evidence."], ["General supporter / no evidence", "Use mission education and relevant opportunities; never assert a donation occurred."]]
+      },
+      {
+        name: "Partner Inquiry & Human Follow-up", short: "Partner", status: ["Designed", "Roadmap"], objective: "Route institutional interest to informed human collaboration decisions.",
+        audience: "Schools, government, nonprofits, businesses, funders, community organizations.",
+        trigger: "SEG - Partners or an approved partnership inquiry.",
+        fields: "Partner Type, Interest Area, Source Name, Preferred Contact Method, Human Follow-up Needed, Last Key Action.",
+        entry: "A relevant inquiry and appropriate permission to respond; adequate institutional context.",
+        exclusions: "Unsupported relationship assumptions, missing critical information, restricted contact, or duplicate assignment.",
+        exit: "Active partnership, appropriate nurture, documented decline, withdrawal, or escalation.",
+        reenroll: "Materially new inquiries may trigger review; do not create repeated ownership assignments for one inquiry.",
+        measure: "Review time, contact completion, discovery progression, and verified partnership development; proposed.",
+        platform: "Native CRM task queues, owner assignment, and automated SLAs are unconfirmed. A manual team review is valid.",
+        nodes: [
+          node("Partner interest → classification", ["Designed"], "Use Partner Type and specific acquisition context to understand the request."),
+          node("Inquiry review", ["Designed"], "Illustrative proposed operating target: review in 2 business days. Not an actual T4B commitment."),
+          node("Human owner / team queue", ["Roadmap"], "Assign responsibility through an approved manual process or a future supported task system."),
+          node("Initial contact → discovery", ["Designed"], "Use appropriate contact preferences and record meaningful discussions."),
+          node("Collaboration evaluation", ["Designed"], "Institutional fit, delivery requirements, funding, and risks need human judgment."),
+          node("Partnership or nurture", ["Roadmap"], "Only verified collaboration supports an active partnership outcome.")
+        ],
+        branchQuestion: "Is there a viable collaboration?",
+        branches: [["Relevant opportunity", "Coordinate discovery and a human partnership assessment."], ["Not ready / unclear", "Record context, enrich if permitted, and choose human review or suitable nurture."]]
+      },
+      {
+        name: "Human Follow-up Queue", short: "Human review", status: ["Built", "Designed", "Needs Validation"], objective: "Make exceptions visible and assign a responsible human next step.",
+        audience: "Partner inquiries, consent ambiguity, volunteer review, missing information, unclear routing, and personal assistance.",
+        trigger: "Human Follow-up Needed = true; field and matching segment configured.",
+        fields: "Human Follow-up Needed, Last Key Action, Preferred Contact Method; Follow-up Reason is an extended model element.",
+        entry: "Review flag or a clearly documented exception; identify responsible ownership.",
+        exclusions: "Never equate an unchecked flag with absence of risk. Restricted communication remains restricted during review.",
+        exit: "Resolve with a documented outcome or escalate; clear a flag only through an approved process.",
+        reenroll: "Re-open only for a new or unresolved issue, with context and deduplication.",
+        measure: "Queue age, assignment completeness, resolution time, and escalation outcomes; proposed.",
+        platform: "Zoho Campaigns is not a confirmed native task-management queue. Manual review is the fallback. Zoho CRM/ticketing integration is Roadmap.",
+        nodes: [
+          node("Flag", ["Built"], "The Human Follow-up Needed checkbox and corresponding segment were configured."),
+          node("Review → assign responsibility", ["Designed"], "Authorized team review and manual ownership; operational queue orchestration is not confirmed."),
+          node("Appropriate contact", ["Designed"], "Permission-sensitive human outreach using the known preferred method."),
+          node("Record outcome", ["Designed"], "Record relevant evidence and next steps without unnecessary sensitive detail."),
+          node("Update status", ["Needs Validation"], "Manual controlled updates are an alternative to unverified automated field actions."),
+          node("Resolve or escalate", ["Designed"], "Verify resolution; retain or escalate unresolved restrictions.")
+        ],
+        branchQuestion: "Can the reviewer resolve the issue?",
+        branches: [["Resolved with evidence", "Record outcome and evaluate whether the flag may be cleared and a journey resumed."], ["Unresolved / higher risk", "Retain the flag and restrictions; escalate to appropriate responsibility."]]
+      },
+      {
+        name: "Dormant Contact Re-engagement", short: "Re-engagement", status: ["Roadmap"], objective: "Evaluate genuine inactivity before offering a relevant, frequency-controlled return path.",
+        audience: "Previously engaged contacts potentially inactive for 90+ days.",
+        trigger: "Proposed 90+ day meaningful-inactivity threshold, only if relevant reliable tracking is available.",
+        fields: "Lifecycle Stage, Last Key Action, Interest Area, communication permission, reliable engagement evidence.",
+        entry: "Verify actual inactivity, including offline activity where available; permission and frequency eligibility required.",
+        exclusions: "Unsubscribed, withdrawn permission, unreliable activity evidence, human review, or exhausted re-engagement.",
+        exit: "Verified engagement, consent withdrawal, unsubscribe, review, or re-engagement exhaustion.",
+        reenroll: "No endless loop. Set explicit attempt limits and a reviewed cooling-off policy before deployment.",
+        measure: "Meaningful reactivation, reduced frequency, suppression accuracy, and unintended repeat entry; proposed.",
+        platform: "Zoho Campaigns may not observe offline participation. Reliable events, inactivity evaluation, and automatic lifecycle updates are unverified.",
+        nodes: [
+          node("Potential inactivity", ["Roadmap"], "90+ days is a proposed threshold, not an observed deployed rule."),
+          node("Verify actual engagement", ["Roadmap"], "Check reliable online and available offline evidence; absence of email clicks does not prove inactivity."),
+          node("Permission + frequency checks", ["Roadmap"], "Respect suppression, purpose, attempt limits, and communication preferences."),
+          node("Select relevant invitation", ["Roadmap"], "Match the message to supported interest and relationship context."),
+          node("Measure meaningful response", ["Roadmap"], "Prioritize inquiries, participation, or verified interactions over delivery alone."),
+          node("Update stage / reduce frequency", ["Roadmap"], "Only verified reactivation supports Active. Unresponsive contacts must not loop indefinitely.")
+        ],
+        branchQuestion: "Is re-engagement eligible?",
+        branches: [["Reliable inactivity + permission", "Consider a relevant, limited invitation and measure meaningful response."], ["Uncertain / restricted / exhausted", "Review, hold, or reduce frequency; do not automatically re-enroll."]]
+      }
+    ];
+    const scenarios = [
+      { name: "Parent exploring a youth program", short: "Parent", audience: "Parent", household: ["Youth"], interest: "Youth Program", lifecycle: "New", minor: true, guardian: true, verified: true, action: "Suitable program information", next: "Provide permission-appropriate program choices. Check participation-specific guardian requirements before child-specific activities.", workflow: 0, segment: "SEG - Youth and Parents", human: "Review any child-specific eligibility or unclear authorization before participation.", intended: "An informed guardian chooses an appropriate program; participation still requires verified operational evidence.", metric: "Relevant program clicks, inquiries, consent resolution, verified participation.", exception: "Unclear guardian identity or insufficient scope routes to human review.", why: "Parent intent is specific. A known guardian and verified scoped authorization permit relevant next steps, but marketing permission remains a separate gate." },
+      { name: "Prospective mentorship volunteer", short: "Volunteer", audience: "Volunteer", household: [], interest: "Volunteering / Mentorship", lifecycle: "New", minor: false, guardian: false, verified: false, action: "Volunteer onboarding / coordination", next: "Send relevant volunteer information, then coordinate role, availability, and eligibility through human review.", workflow: 2, segment: "SEG - Volunteers", human: "A team member reviews role suitability and onboarding requirements; interest is not approval.", intended: "An appropriate, verified volunteer contribution.", metric: "Review completion, onboarding progression, verified activation.", exception: "Missing availability or eligibility details route to permitted enrichment and review.", why: "Explicit mentorship interest supports role-specific information, not automatic acceptance or a claim of automated screening." },
+      { name: "First-time supporter with multiple interests", short: "Supporter", audience: "Donor", household: [], interest: "Donation + Volunteering", lifecycle: "New", minor: false, guardian: false, verified: false, action: "Supporter nurture + volunteer opportunity", next: "Provide mission-focused communication plus a relevant volunteer opportunity. Validate donor evidence and suppress conflicting or repetitive enrollment.", workflow: 3, segment: "SEG - Donors and Supporters", human: "Validate transaction evidence and coordinate volunteer intent separately.", intended: "Relevant contribution without unsupported donor assumptions or duplicate asks.", metric: "Relevant CTA engagement, verified donation or volunteer contribution, retention.", exception: "No transaction evidence means general supporter treatment, not confirmed first-time donor treatment.", why: "This synthetic record is labeled Donor but has no verified transaction. The architecture does not treat audience labels as proof of a donation." },
+      { name: "Institutional funder seeking collaboration", short: "Partner", audience: "Partner", household: [], interest: "Partnership / Funder", lifecycle: "New", minor: false, guardian: false, verified: false, action: "Human partnership review", next: "Classify the institutional inquiry, assign responsibility through an approved manual process, and coordinate discovery.", workflow: 4, segment: "SEG - Partners", human: "A qualified person evaluates institutional fit and collaboration; this cannot be entirely automated.", intended: "A considered collaboration decision or appropriate nurture.", metric: "Inquiry review time, discovery progression, verified partnership development.", exception: "Missing organizational context needs enrichment; duplicate inquiries need ownership reconciliation.", why: "Funder intent has a high need for human judgment. Segment membership helps route the inquiry but does not imply a funding agreement." },
+      { name: "Shared household, unresolved guardian consent", short: "Household", audience: "Family Contact", household: ["Youth", "Parent/Guardian"], interest: "Youth Program", lifecycle: "Nurturing", minor: true, guardian: false, verified: false, action: "Guardian consent review / hold", next: "Restrict relevant child-specific actions. Establish guardian identity and authorization evidence. Guardian outreach is allowed only where separately permitted.", workflow: 1, segment: "Revised household-aware consent rule (Designed)", human: "Identify the guardian, resolve shared-email ambiguity, and verify purpose-specific authorization.", intended: "A resolved permission state, not automatic enrollment or presumed consent.", metric: "Consent review completion, unresolved cases, verified resolution time.", exception: "Refusal or withdrawal stops affected activities; unanswered requests remain unresolved.", why: "The email represents a household. Household Includes contains Youth, so a Family Contact must not escape review merely because Audience Type is not Youth." },
+      { name: "Previously active, now potentially dormant", short: "Dormant", audience: "General Subscriber", household: [], interest: "Events", lifecycle: "Dormant", minor: false, guardian: false, verified: false, action: "Re-engagement eligibility evaluation", next: "Validate 90+ day meaningful inactivity using reliable evidence. Check offline participation, permission, frequency, and attempt limits before any invitation.", workflow: 6, segment: "SEG - Donors and Supporters; re-engagement segment is Roadmap", human: "Review incomplete activity evidence; do not equate absent email engagement with absent community participation.", intended: "Meaningful reactivation or appropriate reduced frequency.", metric: "Verified reactivation, suppression accuracy, re-enrollment exceptions.", exception: "Unreliable tracking, withdrawn permission, or exhausted attempts prevent automatic re-engagement.", why: "Dormant is a relationship state, not a permission or workflow state. Actual inactivity and re-engagement eligibility still need verification." }
+    ];
+    const lifecycle = {
+      New: { meaning: "Recently acquired or newly recognized relationship.", transitions: [["Nurturing", "Relevant engagement process begins."], ["Active", "Direct entry with verified current participation."], ["Advocate", "Direct entry with verified advocacy evidence."]] },
+      Nurturing: { meaning: "Relevant engagement is underway, but the intended relationship or participation objective is not yet fulfilled.", transitions: [["Active", "A defined engagement or participation milestone is verified."], ["New", "Manual correction based on evidence."]] },
+      Active: { meaning: "Evidence exists of current meaningful participation or engagement.", transitions: [["Dormant", "Defined meaningful-inactivity threshold reached and validated."], ["Advocate", "A defined advocacy milestone is observed."], ["Nurturing", "Manual correction or a reviewed relationship change."]] },
+      Dormant: { meaning: "Previously engaged relationship with a sufficiently defined and validated period of inactivity.", transitions: [["Active", "Meaningful reactivation is verified."], ["Nurturing", "A relevant re-engagement process begins without claiming full reactivation."]] },
+      Advocate: { meaning: "Actively promotes, refers, contributes, or champions the organization, with supporting evidence.", transitions: [["Dormant", "Validated inactivity, not simply an unanswered email."], ["Active", "Manual correction to match current relationship evidence."]] }
+    };
+    const governance = [
+      ["Data Governance", ["Field dictionary and controlled values", "Field ownership and source-of-truth rules", "Data quality monitoring and duplicate management", "Source provenance and completeness checks"], "A prepared import file does not establish production field configuration or successful import."],
+      ["Workflow Governance", ["WF / SEG / EMAIL naming conventions", "Enrollment, suppression, and repeat-entry rules", "Branch ordering and manual override", "Version notes, testing, and activation approvals"], "Workflow creation does not prove activation. Keep unvalidated branches off and document changes."],
+      ["Privacy & Consent", ["Separate marketing permission, participation consent, guardian authorization, and personal-information permission", "Minor-related restrictions and consent withdrawal", "Data minimization, permission management, and access control", "Purpose-specific evidence and review"], "This is a consent-aware design, not certified legal compliance. A checkbox alone is not verified guardian authorization."],
+      ["Operational Governance", ["Human ownership and exception review", "Proposed SLA monitoring and escalation", "Manual fallback and change approval", "Audit trail and incident handling"], "A follow-up checkbox and segment are configured. A live task queue or formal operating process is not confirmed."],
+      ["Deployment Safeguards", ["Synthetic and test contacts", "Segment-entry and restricted-audience checks", "Workflow OFF-state review and controlled activation", "Rollback plan and post-launch monitoring"], "Validate actual platform behavior, reconcile expected enrollment, and require appropriate approval before activation."]
+    ];
+    const metrics = [
+      { title: "Data & System Health", items: ["Contact completeness", "Duplicate rate", "Field mapping success", "Source traceability", "Consent status completeness", "Segment coverage", "Workflow enrollment accuracy", "Automation error rate"], source: "Import reconciliation, field audits, supported segment and workflow checks. Proposed monitoring, not observed live results." },
+      { title: "Journey & Operational Effectiveness", items: ["Welcome delivery", "Email engagement", "Relevant CTA clicks", "Program inquiries", "Consent resolution time", "Human follow-up completion", "Partner review time", "Volunteer onboarding progression", "Workflow completion", "Re-engagement outcomes"], source: "Campaign evidence plus manual operational outcomes. Initial welcome receipt was tested; broader effectiveness is not established." },
+      { title: "Mission & Relationship Outcomes", items: ["Program participation", "Volunteer activation", "Repeat participation", "Donor retention", "Partnership development", "Community engagement", "Advocacy and referral activity"], source: "Verified program, volunteer, donation, and partnership records beyond Zoho Campaigns. No confirmed automated integration." }
+    ];
+    const state = { panel: null, stage: null, tab: "executive", workflow: 0, workNode: 0, branch: null, scenario: 0, journeyStep: 0, persona: 0, life: "New", metric: 0, dictionary: "configured", consentMinor: true, consentGuardian: false, consentStatus: "Required", consentVerified: false, consentPermission: true, consentBranch: null, permission: true, invalid: false, review: false };
+    let returnFocus = null;
+    const drawer = document.getElementById("drawer");
+    const head = document.getElementById("drawerhead");
+    const body = document.getElementById("drawerbody");
+    const foot = document.getElementById("drawerfoot");
+    document.getElementById("flow").innerHTML = stages.map(stage => `<button class="stage" data-stage="${stage.id}" aria-expanded="false" aria-controls="drawer"><span class="stage-top"><span class="stage-icon">${svg(stage.icon)}</span><span class="stage-number">0${stage.id}</span></span><span class="stage-title">${stage.name}</span><span class="stage-sub">${stage.sub}</span><span class="stage-bottom">${badges(stage.status)}${svg("right")}</span>${stage.id !== 3 && stage.id !== 6 ? `<span class="connector">${svg("arrow", "0 0 30 12")}</span>` : ""}</button>`).join("");
+    document.getElementById("legend").innerHTML = statuses.map(status => `<span class="legend-item"><span class="dot ${status.toLowerCase().replaceAll(" ", "-")}"></span>${status}</span>`).join("");
+
+    function dataContent(tab) {
+      if (tab === "executive") return `<p class="lead">${stages[0].summary}</p>${callout("Prepared / Cleaned — Production Import Not Confirmed", "The figures below describe the working consolidation exercise, not a live Zoho Campaigns audience.")}${section("Historical preparation evidence", `<div class="mini-grid">${[["11", "Source CSV files"], ["723", "Raw rows"], ["403", "Valid deduplicated contact records"], ["320", "Duplicate rows removed"], ["175", "Email addresses in multiple source files"]].map(([n,t]) => `<div class="tile"><span class="big">${n}</span><p>${t}</p></div>`).join("")}</div>`)}${section("One contact foundation, multiple journeys", steps(["<strong>T4B Master Contacts</strong><small>Master mailing list configured · Built</small>", "Audience attributes", "Dynamic segments", "Relevant journeys"]))}${callout("Email identity is not individual identity", "Zoho Campaigns primarily identifies contacts by a unique email address. Shared family addresses require a controlled household model.", "safe")}${link(2, "Explore household identity")}${link(1, "Inspect normalization & import gates", "technical")}`;
+      if (tab === "technical") return section("Preparation & controlled import architecture", steps(["Legacy lists / event files / contact sources", "Schema alignment", "Whitespace & email normalization", "Email validation", "Deduplication", "Attribute enrichment from evidence", "Audience classification with review", "Master import file", "Test validation", "Controlled import — Needs Validation"])) +
+        section("Synthetic before & after", `<span class="simulation-label">Synthetic data only</span><div class="mini-grid"><div class="tile"><h4>Raw source</h4><code>email: " FAMILY@EXAMPLE.INVALID "<br>name: " Alex Family "<br>category: " parent "<br>consent: blank</code></div><div class="tile"><h4>Normalized</h4><code>email: "family@example.invalid"<br>name: "Alex Family"<br>category: "Parent" (reviewed)<br>consent: blank, not inferred</code></div></div>${disclosure("Show the duplicate merge decision", `<p>Two synthetic sources share this normalized email. Produce one communication identity, retain both source references, and review conflicting names or roles. Do not overwrite meaningful names or infer household membership from a duplicate email alone.</p>`)}`) +
+        section("Record identity & deduplication", list(["Normalize whitespace and email identifiers; preserve meaningful original names.", "Resolve email-based duplicates while retaining source provenance and conflict evidence.", "Standardize category labels through review; an unreliable filename is not enough to assign persona.", "Do not fabricate age, behavioral evidence, consent, or missing demographic attributes."])) +
+        section("Missing-value semantics", kv([["Blank", "No value was supplied. Route critical gaps to enrichment or review."], ["Unknown", "Uncertainty is explicitly represented; it must not pass an adult/verified gate."], ["Not Applicable", "The field does not apply to this record. Different from missing."], ["Avoid", "Dash, zero, or arbitrary placeholders distort conditions and reporting."]])) +
+        section("Schema & import mapping", `<p>Map names, email identity, controlled pick lists, multiselects, checkboxes, and dates to their actual supported types. Validate delimiter handling, field names, values, date formats, and missingness in a controlled test before import.</p>${link(3, "Inspect configured fields versus prepared columns", "technical")}`);
+      return section("Validation gates & error handling", list(["Validate email format, schema, allowed values, and required identity attributes.", "Keep invalid rows and unresolved merge conflicts in a review set with explicit reasons; never silently discard them.", "Verify mapping with synthetic test contacts before importing a controlled batch.", "Reconcile expected rows, accepted rows, rejected rows, and segment membership after import.", "Preserve rejection details and source references for repair; do not treat a prepared file as import success.", "Review permission evidence and controlled activation separately from import acceptance."])) +
+        callout("Activation status", "Prepared contact consolidation and configured master list are established. Production import, reconciliation, and full activation are not confirmed.", "warning") +
+        section("Proposed monitoring", badges(["Designed"]) + list(["Valid email percentage", "Duplicate percentage", "Contact completeness", "Audience classification coverage", "Source attribution completeness", "Consent status completeness", "Import rejection rate", "Duplicate / conflict exception count"])) +
+        link(6, "Connect data quality to measurement", "technical");
+    }
+    function identityContent(tab) {
+      if (tab === "executive") return `<p class="lead">${stages[1].summary}</p>${callout("Email Identity ≠ Guaranteed Individual Identity", "One email may represent a household. Configured household fields do not create a fully functioning relational household database.", "safe")}` +
+        section("A parent and a 15-year-old share one email", `<span class="simulation-label">Synthetic household illustration</span><div class="mini-grid"><div class="tile"><h4>Incorrect strategy</h4><p>Parent + youth → two campaign contacts with the same email → identity collision and incorrect segmentation.</p></div><div class="tile"><h4>Controlled strategy</h4><p>Parent + youth → one email-based communication record → household context → guardian-sensitive review.</p></div></div>`) +
+        section("Four different permission questions", kv([["Marketing", "May this email identity receive the relevant marketing communication?"], ["Participation", "Is the relevant program participation consent established?"], ["Guardian", "Is appropriate authorization for this minor verified?"], ["Personal data", "Is collection and use of the relevant personal information permitted?"]])) +
+        callout("No permission inheritance", "A household field is not proof of consent for every household member. A Received field value is not automatically verified authorization.") +
+        link(2, "Try the consent decision tree", "technical") + link(5, "Inspect guardian follow-up", "technical");
+      if (tab === "technical") return section("Configured household fields", fields.filter(f => ["Household/Family ID", "Primary Contact Role", "Household Includes"].includes(f.name)).map(field => disclosure(field.name, badges(["Built"]) + kv([["Type", field.type], ["Values", field.values], ["Purpose", field.purpose]]))).join("")) +
+        section("Original rule → household-aware revision", badges(["Built"]) + `<p>Original individual-centric segment configuration:</p><code class="rule">Audience Type = Youth AND Age Group = Under 18 AND Parent Consent Status = Required</code><p style="margin-top:14px">Later household-aware design:</p>${badges(["Designed", "Needs Validation"])}<code class="rule">Parent Consent Status = Required AND Household Includes contains Youth</code><p style="margin-top:10px">The revision catches household records where the primary role is not Youth. It does not prove all downstream automations were revised, tested, or activated.</p>`) +
+        section("Explore consent eligibility", consentExplorer()) +
+        section("Consent data dependencies", `<p>Age Group, Parent Consent Status, Primary Contact Role, Household Includes, Household/Family ID, and Human Follow-up Needed support review.</p>${disclosure("Proposed evidence fields", badges(["Roadmap"]) + list(["Parent/Guardian Name and Email", "Consent Captured Date", "Consent Source", "Consent Verification Reference", "Consent Purpose", "Consent Expiry/Review Date where applicable"]))}`);
+      return section("Designed guardian follow-up", badges(["Designed", "Roadmap"]) + steps(["Day 0: approved guardian outreach, only where permitted", "Day 3: consider a reminder if unresolved and permitted", "Day 7: unresolved case → human review", "Verified consent: controlled update → evaluate next eligible journey", "Refusal / withdrawal: maintain restriction → stop affected actions"])) +
+        section("Cross-system risk controls", list(["Shared household email protection and ambiguity review", "Guardian identity and purpose-specific evidence verification", "Restricted automation for minors", "Communication purpose limitation and sensitive-data minimization", "Access permissions, auditability, and controlled updates", "Withdrawal handling and explicit manual fallback"])) +
+        callout("Legal and platform boundary", "This architecture is not a legal compliance certification. A checkbox alone is not established guardian authorization. Validate Zoho Campaigns action support; a manual authorized review is acceptable.", "warning") +
+        link(5, "Inspect workflow B and manual alternatives", "technical") + link(3, "Inspect consent-dependent segments", "technical");
+    }
+    function consentExplorer() {
+      const restricted = !state.consentPermission || (state.consentMinor && (!state.consentGuardian || !state.consentVerified || state.consentStatus !== "Received"));
+      const outcome = !state.consentPermission ? "Suppress relevant marketing communication" : !state.consentMinor ? "Evaluate other permission and eligibility gates" : restricted ? "Hold restricted actions & review guardian evidence" : "Continue only within verified permission scope";
+      return `<span class="simulation-label">Illustrative Simulation — Synthetic Data</span>
+        <label class="checkrow"><input type="checkbox" data-consent="consentMinor" ${state.consentMinor ? "checked" : ""}>Minor participation is involved</label>
+        <label class="checkrow"><input type="checkbox" data-consent="consentGuardian" ${state.consentGuardian ? "checked" : ""}>Appropriate guardian identity established</label>
+        <div class="inputrow"><label for="consent-status">Recorded Parent Consent Status</label><select id="consent-status" data-consent-status>${["Not Required", "Required", "Sent", "Received", "Missing"].map(v => `<option ${v === state.consentStatus ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+        <label class="checkrow"><input type="checkbox" data-consent="consentVerified" ${state.consentVerified ? "checked" : ""}>Relevant authorization evidence independently verified</label>
+        <label class="checkrow"><input type="checkbox" data-consent="consentPermission" ${state.consentPermission ? "checked" : ""}>Relevant marketing permission established</label>
+        ${steps(["Program interest / household record", "Minor involvement → guardian identity", "Requirement → recorded status → verified evidence"])}
+        <div class="branches"><button class="branch ${state.consentBranch === "allowed" ? "active" : ""}" data-consent-branch="allowed"><strong>Verified + scoped permission</strong>Permitted activity only</button><button class="branch ${state.consentBranch === "review" ? "active" : ""}" data-consent-branch="review"><strong>Missing / ambiguous / refused</strong>Hold and review</button></div>
+        ${state.consentBranch ? callout("Branch rationale", state.consentBranch === "allowed" ? "All relevant requirements must be independently satisfied. Marketing permission alone never authorizes child-specific participation." : "Do not interpret missing, sent, received-but-unverified, or unanswered requests as authorization. Preserve restrictions and review.") : ""}
+        <div class="result ${restricted ? "hold" : ""}" role="status"><div class="eyebrow">Evaluated synthetic result</div><h3>${outcome}</h3><p>${restricted ? "No restricted child-specific action is permitted. Guardian outreach also requires an appropriate permission basis." : "This is a designed eligibility illustration, not backend execution or automatic workflow enrollment."}</p></div>`;
+    }
+    function audienceContent(tab) {
+      if (tab === "executive") return `<p class="lead">${stages[2].summary}</p>` + personaExplorer() +
+        section("Keep identity dimensions distinct", kv([["Audience Type", "Who the contact is."], ["Interest Area", "What the contact cares about."], ["Lifecycle Stage", "Where the relationship stands."], ["Consent Status", "Which actions are permitted or need review."], ["Workflow Status", "Which automation process is underway."]])) +
+        callout("A single persona field has limits", "Someone may be a parent, donor, and volunteer at once. Audience Type cannot reliably express all simultaneous roles. Household Includes models household composition, not verified person-level roles or permissions.") +
+        link(3, "Search fields and segment rules", "technical");
+      if (tab === "technical") return dictionary() + section("Seven configured dynamic segments", segments.map((segment, i) => disclosure(segment.name, badges(["Built"]) + `<code class="rule">${esc(segment.rule)}</code><p style="margin-top:10px">${segment.why}</p><button class="crosslink" data-workflow-link="${segment.workflow}">Inspect the related workflow →</button>${i === 5 ? link(2, "Compare the revised household-aware rule", "technical") : ""}`)).join("")) +
+        callout("Dynamic membership ≠ automatic enrollment", "Rule-based segments may recalculate as supported fields change. Membership changes do not guarantee every desired workflow action fires. Validate actual segment-entry, existing-contact, and repeat-entry behavior.") +
+        section("Proposed audience extensions", badges(["Roadmap"]) + list(proposedSegments));
+      return section("Multi-role operating control", `<p>Use additional interest dimensions to recognize overlapping needs without duplicating email identities. Household Includes describes family composition; it is not a replacement for a future person-level relationship model.</p>${badges(["Roadmap"])}<p style="margin-top:10px">A richer role-based data model should preserve multiple relationships and purpose-specific permissions. Define priority, suppression, ownership, and deduplication before parallel journey enrollment.</p>`) +
+        section("Segment validation checks", list(["Verify controlled values and blank-versus-Unknown behavior.", "Test OR/AND branch precedence with synthetic contacts.", "Test entry, removal, field-change, and re-entry behavior.", "Check shared-email households against revised minor-review conditions.", "Separate a segment's configuration from workflow activation status.", "Review suppression and overlapping memberships before activation."])) +
+        link(4, "Inspect next-action precedence", "technical") + link(5, "Inspect workflow enrollment boundaries", "operational");
+    }
+    function personaExplorer() {
+      const persona = personas[state.persona];
+      return section("Three persona families", `<div class="pillset">${personas.map((p,i) => `<button class="pill" data-persona="${i}" aria-pressed="${i === state.persona}">${p.name}</button>`).join("")}</div><div class="tile"><h4>${persona.name}</h4><p>${persona.members}</p><p style="margin-top:10px">${persona.purpose}</p></div><div style="margin-top:16px">${badges(["Designed"])}${steps(persona.journey)}</div><button class="crosslink" data-scenario-link="${persona.scenario}">Explore this synthetic journey →</button>`);
+    }
+    function dictionary() {
+      return section("Searchable field dictionary", callout("Configured field ≠ import column ≠ future extension", "The first group contains 17 configured fields. The separate extended model includes standard attributes, prepared import columns, and proposed extensions; it is not an inventory of live custom fields.") +
+        `<div class="pillset"><button class="pill" data-dictionary="configured" aria-pressed="${state.dictionary === "configured"}">Configured Zoho fields · 17</button><button class="pill" data-dictionary="extended" aria-pressed="${state.dictionary === "extended"}">Extended / import model · 24</button></div><label class="sr-only" for="field-search">Search fields by name, purpose, persona, or dependency</label><input id="field-search" class="search" type="search" placeholder="Search name, purpose, persona…" autocomplete="off"><div class="fieldcount" id="fieldcount" role="status"></div><div id="field-results">${fieldResults("")}</div>`);
+    }
+    function fieldResults(query) {
+      const source = state.dictionary === "configured" ? fields : extended;
+      const results = source.filter(field => Object.values(field).join(" ").toLowerCase().includes(query.toLowerCase()));
+      return results.length ? results.map(f => `<details class="field"><summary><span>${esc(f.name)}</span></summary>${badges([f.status])}${kv([["Type / scope", esc(f.type)], ...(f.values ? [["Typical values", esc(f.values)]] : []), ["Purpose", esc(f.purpose)], ...(f.persona ? [["Persona", esc(f.persona)], ["Dependency", esc(f.dependency)]] : [["Deployment", "Production mapping/configuration is not established."]])])}${f.name === "Preferred Contact Method" ? badges(["Needs Validation"]) + "<p>Exact allowed options require verification.</p>" : ""}</details>`).join("") : '<p class="empty">No fields match. Try a different name, purpose, or persona.</p>';
+    }
+    function decisionContent(tab) {
+      if (tab === "executive") return `<p class="lead">${stages[3].summary}</p>${callout("Segmentation identifies. Decisioning determines.", stages[3].value, "safe")}` +
+        section("Designed decision priority", steps(["<strong>01 · Consent, safety & permission</strong>Restrictions always precede intent.", "<strong>02 · Contact protection</strong>Invalid or suppressed identities.", "<strong>03 · High-priority human exceptions</strong>Ambiguous or unresolved records.", "<strong>04 · Specific audience intent</strong>Program, volunteering, donation, partnership.", "<strong>05 · Lifecycle & engagement suitability</strong>Use supported evidence.", "<strong>06 · General nurture</strong>Only after all eligibility gates pass."])) +
+        link(4, "Explore six synthetic decisions", "technical");
+      if (tab === "technical") return section("Designed decision engine", badges(["Designed"]) + steps(["Eligibility gate", "Persona classification", "Need / interest interpretation", "Relationship stage", "Engagement readiness", "Recommended next action"])) +
+        section("Inputs & possible outcomes", disclosure("Input dictionary", list(["Audience Type, Interest Area, Program Interest, Volunteer Interest, Partner Type", "Lifecycle Stage, Age Group, Parent Consent Status, Household Includes", "Source Category, Last Key Action, Human Follow-up Needed", "Communication permission and available engagement evidence"])) + disclosure("Next-action outputs", list(["Program Welcome", "Guardian Consent Review", "Volunteer Onboarding", "Donor Engagement", "Partner Follow-Up", "General Nurture", "Human Review", "Data Enrichment", "Re-engagement", "Suppress / Hold"]))) +
+        section("Six synthetic decision scenarios", scenarioExplorer(false));
+      return section("No predictive engine claim", badges(["Roadmap"]) + `<p>Engagement scoring, multi-role priority, next-best-action selection, frequency controls, human priority scoring, program affinity, and re-engagement scoring are proposed enhancements. No deployed AI, predictive model, or advanced scoring system is claimed.</p>`) +
+        section("Exception handling", list(["Restrictions cannot be overridden by high-value segment membership.", "Missing or conflicting critical fields require review or permitted enrichment.", "Use verified evidence to distinguish a supporter from a donor.", "Avoid parallel conflicting enrollment for Donation + Volunteering interests.", "Unreliable engagement data prevents automatic inactivity conclusions.", "Review ownership and record rationale before manual override."])) +
+        link(2, "Inspect permission boundaries", "technical") + link(5, "Follow a decision into a journey", "technical");
+    }
+    function evaluateScenario() {
+      const scenario = scenarios[state.scenario];
+      if (!state.permission) return { title: "Suppress / Hold", next: "Relevant marketing permission is not established. Do not enroll or send marketing communications; route only to an independently permitted review process.", hold: true, gate: "Permission restriction takes precedence over persona and value.", condition: "Relevant communication permission = false" };
+      if (state.invalid) return { title: "Invalid / suppressed contact protection", next: "Hold automated communications and reconcile identity or suppression through an authorized review. Intent cannot bypass contact protection.", hold: true, gate: "Contact protection blocks automation before audience intent.", condition: "Invalid or suppressed identity = true" };
+      if (scenario.minor && (!scenario.guardian || !scenario.verified)) return { title: "Guardian consent review / hold", next: scenario.next, hold: true, gate: "Minor-related authorization is unresolved. Child-specific restrictions precede every audience action.", condition: "Minor involved AND guardian identity / relevant authorization not verified" };
+      if (state.review) return { title: "High-priority human review", next: "Hold conflicting automated enrollment while a responsible reviewer resolves the exception. Preserve existing permission restrictions.", hold: true, gate: "Human exceptions are evaluated before specific audience intent.", condition: "Human Follow-up Needed = true" };
+      return { title: scenario.action, next: scenario.next, hold: false, gate: "Illustrative permission gate passed; remaining operational requirements still apply.", condition: `${scenario.audience} + ${scenario.interest} + ${scenario.lifecycle}` };
+    }
+    function scenarioExplorer(full) {
+      const scenario = scenarios[state.scenario], result = evaluateScenario();
+      const labels = ["Data fields", "Identity & eligibility", "Segment membership", "Decision", "Designed workflow", "Intended evidence"];
+      const relevant = [
+        kv([["Audience Type", scenario.audience], ["Interest", scenario.interest], ["Lifecycle Stage", scenario.lifecycle], ["Household Includes", scenario.household.join(", ") || "No household context supplied"], ["Source", "Synthetic demonstration; no real contact record"]]),
+        callout("Eligibility evaluation", result.gate, result.hold ? "warning" : "safe") + kv([["Minor involvement", scenario.minor ? "Yes" : "Not indicated in this scenario"], ["Guardian identity", scenario.guardian ? "Established (synthetic)" : scenario.minor ? "Unresolved" : "Not applicable to this scenario"], ["Scoped authorization", scenario.verified ? "Verified (synthetic)" : scenario.minor ? "Unverified" : "Not applicable to this scenario"], ["Marketing permission", state.permission ? "Established (synthetic)" : "Not established"]]),
+        callout("Relevant membership / rule", esc(scenario.segment)) + `<p>Membership is not automatic workflow enrollment. Household-aware evolution and proposed re-engagement segments retain their own statuses.</p>` + link(3, "Inspect exact segment rules", "technical"),
+        `<div class="result ${result.hold ? "hold" : ""}"><div class="eyebrow">Branch result</div><h3>${result.title}</h3><p>${result.next}</p></div>`,
+        callout(result.hold ? "Candidate journey is blocked or conditional" : "Candidate designed workflow", `${workflows[scenario.workflow].name}. ${result.hold ? "Do not enroll a restricted contact. Review and permission resolution are required." : "Illustrative routing only; no backend action is executed."}`) + badges(workflows[scenario.workflow].status) + `<button class="crosslink" data-workflow-link="${scenario.workflow}">Inspect workflow status, gates & actions →</button><p style="margin-top:10px"><strong>Human intervention:</strong> ${scenario.human}</p>`,
+        kv([["Intended outcome", result.hold ? "Resolved eligibility and a documented safe next step before any restricted activity." : scenario.intended], ["Could be measured", result.hold ? "Review completion, unresolved restrictions, permission resolution, and suppression accuracy." : scenario.metric], ["Evidence boundary", "Proposed measurement. No customer journey has been executed."]]) + link(6, "Explore the measurement hierarchy", "technical")
+      ];
+      return `<span class="simulation-label">Illustrative Simulation — Synthetic Data</span><div class="pillset">${scenarios.map((s,i) => `<button class="pill" data-scenario="${i}" aria-pressed="${i === state.scenario}">${s.short}${i === 5 && full ? " · additional" : ""}</button>`).join("")}</div><h3>${scenario.name}</h3>
+        ${full ? `<p class="lead">Trace a candidate path. Every view describes local designed logic, never live execution.</p><div class="trail" aria-label="Explore the scenario through six stages">${labels.map((label,i) => `<button data-journey-step="${i}" aria-pressed="${i === state.journeyStep}" aria-label="Stage ${i+1}: ${label}">0${i+1}</button>`).join("")}</div>${section(labels[state.journeyStep], relevant[state.journeyStep])}<div class="pillset"><button class="btn" data-journey-prev ${state.journeyStep === 0 ? "disabled" : ""}>← Previous step</button><button class="btn" data-journey-next ${state.journeyStep === 5 ? "disabled" : ""}>Next step →</button></div>` : kv([["Inputs", `${scenario.audience} · ${scenario.interest} · ${scenario.lifecycle}${scenario.household.length ? " · Household: " + scenario.household.join(", ") : ""}`], ["Conditions", result.condition], ["Eligibility", result.gate]])}
+        <details ${!full ? "open" : ""}><summary>Change safety gates</summary><label class="checkrow"><input type="checkbox" data-gate="permission" ${state.permission ? "checked" : ""}>Relevant communication permission established</label><label class="checkrow"><input type="checkbox" data-gate="invalid" ${state.invalid ? "checked" : ""}>Identity is invalid or suppressed</label><label class="checkrow"><input type="checkbox" data-gate="review" ${state.review ? "checked" : ""}>High-priority human exception flagged</label></details>
+        <div class="result ${result.hold ? "hold" : ""}" role="status"><div class="eyebrow">Recommended next action · Designed</div><h3>${result.title}</h3><p>${result.next}</p></div>
+        ${disclosure("Why this decision?", `<p>${scenario.why}</p><p><strong>Priority applied:</strong> ${result.gate}</p>${kv([["Safeguards", "Purpose-specific permission, minor restrictions, identity protection, human review, and repeat-enrollment controls."], ["Exception path", !state.permission || state.invalid ? "Retain the hold; correct the restriction only through an authorized evidence-based process." : scenario.exception], ["Human role", scenario.human]])}`)}
+        ${!full ? `<button class="crosslink" data-workflow-link="${scenario.workflow}">Inspect candidate workflow (subject to eligibility) →</button>` : ""}`;
+    }
+    function journeyContent(tab) {
+      if (tab === "executive") return `<p class="lead">${stages[4].summary}</p>${callout("Precisely what was tested", "<strong>EMAIL 1 - Youth Parent Welcome</strong> was received successfully in testing. The full multi-email sequence, every wait, downstream branches, and production activation are not confirmed.", "safe")}` +
+        section("Seven connected journey designs", workflows.map((w,i) => `<details><summary>${String.fromCharCode(65+i)} · ${w.name}</summary>${badges(w.status)}<p style="margin-top:10px">${w.objective}</p><button class="crosslink" data-workflow-link="${i}">Explore this workflow →</button></details>`).join("")) +
+        link(5, "Open the interactive workflow explorer", "technical");
+      if (tab === "technical") return workflowExplorer();
+      return section("Enrollment is a controlled decision", list(["Apply consent and communication eligibility before relevant sends or actions.", "Validate new segment entrants versus existing-contact enrollment.", "Test segment changes, exclusions, waits, conditional branches, exits, and re-entry.", "Do not assume workflow activation from creation or welcome receipt.", "Use an approved manual review and update process where platform actions are unsupported.", "Keep task ownership, SLA tracking, and lifecycle updates explicit rather than implying a live CRM."])) +
+        section("Cross-workflow controls", badges(["Designed"]) + list(["Specific intent takes precedence over generic nurture after safety gates.", "Multi-interest supporters need conflict and frequency suppression.", "Human review holds affected activities until resolved.", "Guardian refusal or withdrawal stops the affected path.", "Re-engagement has attempt limits and no endless repeat loop.", "Capture version, activation approval, rollback, and post-launch review."])) +
+        section("Platform dependencies to verify", badges(["Needs Validation"]) + list(["Exact Zoho Campaigns segment entry and re-enrollment behavior", "Supported condition types, multiselect matching, and wait behavior", "Automatic field-update capability", "Native human task queue and assignment support", "Form, donation, offline event, or Zoho CRM integration"])) +
+        link(6, "Link journeys to evidence", "technical");
+    }
+    function workflowExplorer() {
+      const work = workflows[state.workflow], selected = work.nodes[state.workNode];
+      return `<div class="pillset" aria-label="Choose a workflow">${workflows.map((w,i) => `<button class="pill" data-workflow="${i}" aria-pressed="${i === state.workflow}">${String.fromCharCode(65+i)} · ${w.short}</button>`).join("")}</div><h3>${work.name}</h3>${badges(work.status)}<p style="margin-top:12px">${work.objective}</p>` +
+        (state.workflow === 0 ? callout("WF - Test - Youth Parent Welcome", "Built / Partially Tested / Further Steps Designed. Only the initial welcome receipt is confirmed. The improved eligibility gate is an architectural refinement, not a tested production claim.", "safe") : "") +
+        (state.workflow === 1 ? callout("Household-aware revision", "Designed; further validation required. Field and segment configuration do not establish automatic consent verification.") : "") +
+        section("Connected workflow · select any node", `<div class="steps">${work.nodes.map((n,i) => `<button class="step action ${i === state.workNode ? "active" : ""}" data-work-node="${i}" aria-pressed="${i === state.workNode}"><strong>${i+1}. ${n.title}</strong>${badges(n.status)}</button>`).join("")}</div><div class="result" style="margin-top:16px"><div class="eyebrow">Selected node</div><h3>${selected.title}</h3>${badges(selected.status)}<p style="margin-top:10px">${selected.detail}</p></div>`) +
+        section(work.branchQuestion, `<div class="branches">${work.branches.map(([label],i) => `<button class="branch ${i === state.branch ? "active" : ""}" data-work-branch="${i}" aria-pressed="${i === state.branch}"><strong>${label}</strong>Select branch</button>`).join("")}</div>${state.branch !== null ? callout(work.branches[state.branch][0], work.branches[state.branch][1], state.branch === 1 ? "warning" : "safe") : ""}`) +
+        section("Entry, exit & operating contract", kv([["Audience", work.audience], ["Trigger", work.trigger], ["Required fields", work.fields], ["Entry", work.entry], ["Exclusions", work.exclusions], ["Exit", work.exit], ["Re-enrollment", work.reenroll], ["Measurement", work.measure], ["Dependencies", work.platform]])) +
+        section("Related architecture", link(2, "Consent and identity gates", "technical") + link(3, "Segment membership and fields", "technical") + `<button class="crosslink" data-panel="lifecycle">Explore lifecycle state transitions →</button>` + link(6, "Proposed measurement hierarchy", "technical"));
+    }
+    function measurementContent(tab) {
+      if (tab === "executive") return `<p class="lead">${stages[5].summary}</p>${section("Three levels of evidence", metrics.map((m,i) => `<div class="metric"><strong>0${i+1} · ${m.title}</strong><span>${m.source}</span></div>`).join(""))}` +
+        callout("Historical data preparation results", "723 raw rows → 403 valid deduplicated records. 320 duplicate rows removed. These are preparation results, not conversion, revenue, retention, or production audience metrics.", "safe") +
+        section("The learning loop", steps(["Performance observation", "Root-cause diagnosis", "Hypothesis", "Rule / journey adjustment", "Controlled test", "Review → refine"])) +
+        link(6, "Explore proposed metrics and evidence sources", "technical");
+      if (tab === "technical") return section("Proposed measurement hierarchy", badges(["Designed", "Roadmap"]) + `<div class="pillset" style="margin-top:14px">${metrics.map((m,i) => `<button class="pill" data-metric="${i}" aria-pressed="${state.metric === i}">Level ${i+1}</button>`).join("")}</div><h3>${metrics[state.metric].title}</h3><p>${metrics[state.metric].source}</p>${metrics[state.metric].items.map(m => `<div class="metric">${m}<span>Proposed metric · no achieved result claimed</span></div>`).join("")}`) +
+        section("Controlled testing framework", badges(["Designed"]) + steps(["Hypothesis", "Baseline", "Eligible audience", "Test / comparison design", "Measurement", "Evidence-based decision"])) +
+        callout("Measurement boundary", "No randomized experiment, incremental lift, automated outcome attribution, donor revenue result, or predictive model is claimed. Many mission outcomes depend on operational data outside Zoho Campaigns.", "warning") +
+        `<button class="crosslink" data-panel="lifecycle">Inspect lifecycle evidence requirements →</button>`;
+      return section("Feedback into operating decisions", list(["Data definitions and controlled values", "Segment coverage and consent conditions", "Journey content, timing, and frequency", "Enrollment, exclusion, and repeat-entry rules", "Human follow-up ownership and resolution", "Lifecycle transition evidence"])) +
+        section("Diagnose before optimizing", `<p>A low-response journey could reflect missing interests, a poor match, blocked permission, unreliable event tracking, or unresolved human follow-up. Review the cause before changing message volume or marking contacts Dormant.</p>`) +
+        section("Return evidence to the architecture", link(1, "Refine data definitions", "operational") + link(2, "Review consent logic", "operational") + link(3, "Validate segment coverage", "operational") + link(4, "Refine decision priority", "operational") + link(5, "Review journey timing and entry", "operational")) +
+        callout("Operational approval", "Any change affecting audience eligibility or restricted activities needs controlled review and validation before activation.");
+    }
+    function lifecycleContent() {
+      const current = lifecycle[state.life];
+      return `<p class="lead">Configured values describe relationship maturity. The transitions below are designed rules, not activated automatic field updates.</p>${badges(["Built", "Designed"])}<div class="pillset" style="margin-top:18px">${Object.keys(lifecycle).map(name => `<button class="pill" data-life="${name}" aria-pressed="${name === state.life}">${name}</button>`).join("")}</div><div class="tile state-description"><h3>${state.life}</h3><p>${current.meaning}</p></div>` +
+        section("Explore a designed transition", `<div class="state-transitions">${current.transitions.map(([to,why]) => `<button data-life="${to}"><strong>${state.life} → ${to}</strong><br>${why}</button>`).join("")}</div><p>Use the state buttons for direct entry or manual correction. Contacts need not move linearly through every stage.</p>`) +
+        callout("Sending an email does not make a contact Active", "Activity by the organization is not evidence of meaningful contact engagement. Verify a defined interaction or participation milestone before changing relationship state.", "safe") +
+        section("Suppression is outside the lifecycle", `<p>An Active or Advocate contact can still be unsubscribed or restricted. Permission protection remains independent and takes precedence over relationship maturity.</p>`) +
+        section("Do not interchange dimensions", kv([["Audience Type", "Persona / relationship role"], ["Interest Area", "What matters to the contact"], ["Lifecycle Stage", "Current relationship maturity"], ["Consent Status", "Relevant permission or review requirement"], ["Workflow Status", "Process underway"]])) +
+        link(6, "Connect state transitions to verified outcomes", "technical");
+    }
+    function specialContent(panel) {
+      if (panel === "scenario") return scenarioExplorer(true);
+      if (panel === "lifecycle") return lifecycleContent();
+      if (panel === "governance") return `<p class="lead">The foundation applies across all six stages. Configured fields and naming structures are distinct from proposed formal operating controls.</p>${badges(["Designed"])}${governance.map(([title,items,note]) => section(title, list(items) + callout("Implementation boundary", note))).join("")}${link(5, "Inspect platform action dependencies", "operational")}`;
+      if (panel === "maturity") return `<p class="lead">A maturity model, not a claim that each level has been delivered.</p><div class="timeline">${[
+        ["01 · Foundation", ["Built", "Tested", "Needs Validation"], ["Contact consolidation and prepared master file", "Configured master list, 17 fields, and 7 segments", "Basic welcome receipt tested", "Initial and household-aware consent consideration"], "Production import, full sequence testing, and workflow activation are not confirmed."],
+        ["02 · Orchestrated Engagement", ["Designed", "Roadmap"], ["Full multi-path nurture and reliable form integration", "Consent-aware enrollment and human follow-up operations", "Lifecycle controls and finite re-engagement", "Monitoring dashboards and operational ownership"], "Designed operating controls require platform validation, testing, and approved activation."],
+        ["03 · Integrated Lifecycle Intelligence", ["Roadmap"], ["Full CRM integration and richer relationship identities", "Reliable behavioral events and cross-channel engagement", "Multi-role / household modeling and next-best-action rules", "Outcome-driven optimization, advanced reporting, and attribution"], "No Zoho CRM integration, predictive system, or advanced attribution deployment has been confirmed."]
+      ].map(([title,status,items,note]) => `<section class="milestone"><h3>${title}</h3>${badges(status)}${list(items)}<p>${note}</p></section>`).join("")}</div>`;
+      if (panel === "status") return `<p class="lead">Every marker describes the case-study project, not the functionality of this demonstration.</p>${section("Status definitions", kv([["Built", "Actually configured or created in the working project."], ["Tested", "A specific function or step successfully validated. Not an entire journey."], ["Designed", "Logic defined; full execution is not confirmed."], ["Roadmap", "Future capability or extension."], ["Needs Validation", "Current implementation or platform behavior cannot be verified."]]))}${section("What the supplied project evidence establishes", list(["Prepared consolidation: 11 CSVs, 723 rows, 403 deduplicated valid records, 320 duplicate rows removed, 175 repeated emails across files.", "T4B Master Contacts mailing list configured.", "17 audience, lifecycle, source, consent, follow-up, and household fields configured.", "Seven original dynamic segments configured.", "Test welcome workflow created; initial welcome email received in testing."]))}${section("What is not established", list(["Production import of the entire prepared dataset.", "A functioning relational household database.", "Full nurture testing or production workflow activation.", "Automatic guardian verification, field updates, or CRM task assignment.", "Zoho CRM, donation, offline behavior, or cross-channel integration.", "Achieved conversion, revenue, retention, participation lift, or attribution."]))}${callout("Evidence provenance", "Project statuses are grounded in the supplied master build prompt. This offline artifact does not independently inspect or verify a live T4B or Zoho account.")}`;
+      return `<p class="lead">Thrive-4-Blacks is a Canadian community and youth-development nonprofit with different relationship needs across families, supporters, and institutions.</p>${section("The business challenge", list(["Fragmented spreadsheets and legacy contact lists", "Limited segmentation and incomplete audience attributes", "Inconsistent source tracking and shared family contact details", "Underage participant consent considerations", "No confirmed fully integrated CRM", "Need for structured human follow-up and repeatable engagement", "Moving beyond one-size-fits-all newsletters"]))}${section("An evolving operating model", steps(["Collect → clean", "Identify → segment", "Decide → engage", "Measure → improve"]))}${callout("One governed foundation", "Connect audience intelligence, consent, segmentation, journey orchestration, and measurable community engagement. CRM architecture is not the same as a fully deployed CRM.", "safe")}${section("Platform & publication boundary", `<p>The project uses <strong>Zoho Campaigns</strong>. No Zoho CRM integration is confirmed. This independent case study is not an official T4B publication or an endorsement by any organization or prospective employer.</p><p>The interface palette complements visible website cues: warm off-white, charcoal, and amber, with a forest-green systems accent. These are not asserted official brand specifications.</p><a href="https://thrive4blacks.org/" target="_blank" rel="noopener noreferrer">Visit the official T4B website ↗</a>`)}`;
+    }
+    const renderers = [dataContent, identityContent, audienceContent, decisionContent, journeyContent, measurementContent];
+    const panelNames = { context: "Project Context & Business Challenge", maturity: "Architecture Evolution", governance: "Governance, Privacy & Operational Safeguards", scenario: "Explore a Customer Journey", lifecycle: "Lifecycle State Model", status: "Implementation Transparency" };
+    function renderDrawer(focus = false) {
+      const stage = state.stage ? stages[state.stage - 1] : null;
+      const title = stage ? stage.name : panelNames[state.panel];
+      head.innerHTML = `<div class="drawer-top"><span class="eyebrow">${stage ? `Stage 0${stage.id} / 06` : "Cross-system explorer"}</span><button class="iconbtn" data-close aria-label="Close details">${svg("close")}</button></div><h2 id="drawer-title" tabindex="-1">${title}</h2>${stage ? badges(stage.status) : ""}${stage ? `<div class="tabs" role="tablist" aria-label="Detail level">${[["executive", "Executive summary"], ["technical", "Technical architecture"], ["operational", "Operational detail"]].map(([id,text]) => `<button class="tab" id="tab-${id}" role="tab" aria-controls="detail-content" aria-selected="${state.tab === id}" tabindex="${state.tab === id ? 0 : -1}" data-tab-select="${id}">${text}</button>`).join("")}</div>` : ""}`;
+      body.innerHTML = stage ? `<div id="detail-content" role="tabpanel" aria-labelledby="tab-${state.tab}">${renderers[stage.id - 1](state.tab)}</div>` : specialContent(state.panel);
+      foot.innerHTML = stage ? `<button class="textbtn" data-prev ${stage.id === 1 ? "disabled" : ""}>← Previous</button><button class="textbtn" data-close>Overview</button><button class="textbtn" data-next ${stage.id === 6 ? "disabled" : ""}>Next stage →</button>` : `<button class="textbtn" data-close>← Return to overview</button>${state.panel === "scenario" ? `<span class="hint">Local illustration · no backend</span>` : ""}`;
+      document.querySelectorAll(".stage").forEach(button => { const active = Number(button.dataset.stage) === state.stage; button.classList.toggle("selected", active); button.setAttribute("aria-expanded", String(active)); });
+      if (stage && state.tab === "technical" && stage.id === 3) updateFieldCount("");
+      if (focus) { body.scrollTop = 0; document.getElementById("drawer-title").focus(); }
+    }
+    function openPanel(panel, stage = null, tab = "executive") {
+      if (drawer.hidden) returnFocus = document.activeElement;
+      state.panel = panel; state.stage = stage; state.tab = tab;
+      drawer.hidden = false; document.body.classList.add("has-drawer");
+      const mobile = window.matchMedia("(max-width: 760px)").matches;
+      drawer.setAttribute("role", mobile ? "dialog" : "complementary");
+      if (mobile) { drawer.setAttribute("aria-modal", "true"); document.querySelector(".overview").inert = true; document.querySelector(".topbar").inert = true; document.querySelector("footer").inert = true; }
+      renderDrawer(true);
+      document.getElementById("announcement").textContent = `${stage ? stages[stage-1].name : panelNames[panel]} opened`;
+    }
+    function closeDrawer() {
+      drawer.hidden = true; state.stage = null; state.panel = null;
+      document.body.classList.remove("has-drawer");
+      document.querySelectorAll("[inert]").forEach(element => element.inert = false);
+      document.querySelectorAll(".stage").forEach(button => { button.classList.remove("selected"); button.setAttribute("aria-expanded", "false"); });
+      if (returnFocus?.isConnected) returnFocus.focus(); else document.getElementById("architecture").focus();
+    }
+    function refreshBody(preserveFocusSelector) {
+      const scroll = body.scrollTop;
+      body.innerHTML = state.stage ? `<div id="detail-content" role="tabpanel" aria-labelledby="tab-${state.tab}">${renderers[state.stage - 1](state.tab)}</div>` : specialContent(state.panel);
+      body.scrollTop = scroll;
+      if (preserveFocusSelector) body.querySelector(preserveFocusSelector)?.focus({ preventScroll: true });
+      if (state.stage === 3 && state.tab === "technical") updateFieldCount("");
+    }
+    function updateFieldCount(query) {
+      const source = state.dictionary === "configured" ? fields : extended;
+      const count = source.filter(f => Object.values(f).join(" ").toLowerCase().includes(query.toLowerCase())).length;
+      const element = document.getElementById("fieldcount");
+      if (element) element.textContent = `${count} of ${source.length} fields`;
+    }
+    document.addEventListener("click", event => {
+      const target = event.target.closest("button");
+      if (!target || target.disabled) return;
+      if (target.hasAttribute("data-print")) { window.print(); return; }
+      if (target.hasAttribute("data-close")) { closeDrawer(); return; }
+      if (target.dataset.stage) { openPanel("stage", Number(target.dataset.stage)); return; }
+      if (target.dataset.stageLink) { openPanel("stage", Number(target.dataset.stageLink), target.dataset.tab || "executive"); return; }
+      if (target.dataset.panel) { openPanel(target.dataset.panel); return; }
+      if (target.dataset.tabSelect) { state.tab = target.dataset.tabSelect; renderDrawer(); body.scrollTop = 0; document.getElementById(`tab-${state.tab}`).focus(); return; }
+      if (target.hasAttribute("data-prev")) { openPanel("stage", state.stage - 1, state.tab); return; }
+      if (target.hasAttribute("data-next")) { openPanel("stage", state.stage + 1, state.tab); return; }
+      if (target.dataset.workflowLink !== undefined) { state.workflow = Number(target.dataset.workflowLink); state.workNode = 0; state.branch = null; openPanel("stage", 5, "technical"); return; }
+      if (target.dataset.scenarioLink !== undefined) { chooseScenario(Number(target.dataset.scenarioLink)); openPanel("scenario"); return; }
+      if (target.dataset.workflow !== undefined) { state.workflow = Number(target.dataset.workflow); state.workNode = 0; state.branch = null; refreshBody(`[data-workflow="${state.workflow}"]`); return; }
+      if (target.dataset.workNode !== undefined) { state.workNode = Number(target.dataset.workNode); refreshBody(`[data-work-node="${state.workNode}"]`); return; }
+      if (target.dataset.workBranch !== undefined) { state.branch = Number(target.dataset.workBranch); refreshBody(`[data-work-branch="${state.branch}"]`); return; }
+      if (target.dataset.persona !== undefined) { state.persona = Number(target.dataset.persona); refreshBody(`[data-persona="${state.persona}"]`); return; }
+      if (target.dataset.scenario !== undefined) { chooseScenario(Number(target.dataset.scenario)); refreshBody(`[data-scenario="${state.scenario}"]`); announceDecision(); return; }
+      if (target.dataset.journeyStep !== undefined) { state.journeyStep = Number(target.dataset.journeyStep); refreshBody(`[data-journey-step="${state.journeyStep}"]`); return; }
+      if (target.hasAttribute("data-journey-prev") || target.hasAttribute("data-journey-next")) { state.journeyStep += target.hasAttribute("data-journey-next") ? 1 : -1; refreshBody(`[data-journey-step="${state.journeyStep}"]`); return; }
+      if (target.dataset.life) { state.life = target.dataset.life; refreshBody(`[data-life="${state.life}"]`); document.getElementById("announcement").textContent = `${state.life}: ${lifecycle[state.life].meaning}`; return; }
+      if (target.dataset.metric !== undefined) { state.metric = Number(target.dataset.metric); refreshBody(`[data-metric="${state.metric}"]`); return; }
+      if (target.dataset.dictionary) { state.dictionary = target.dataset.dictionary; refreshBody(`[data-dictionary="${state.dictionary}"]`); return; }
+      if (target.dataset.consentBranch) { state.consentBranch = target.dataset.consentBranch; refreshBody(`[data-consent-branch="${state.consentBranch}"]`); }
+    });
+    function chooseScenario(index) { state.scenario = index; state.journeyStep = 0; state.permission = true; state.invalid = false; state.review = false; }
+    function announceDecision() { document.getElementById("announcement").textContent = evaluateScenario().title; }
+    document.addEventListener("input", event => {
+      if (event.target.id === "field-search") { document.getElementById("field-results").innerHTML = fieldResults(event.target.value); updateFieldCount(event.target.value); }
+    });
+    document.addEventListener("change", event => {
+      const target = event.target;
+      if (target.dataset.consent) { state[target.dataset.consent] = target.checked; refreshBody(`[data-consent="${target.dataset.consent}"]`); }
+      if (target.hasAttribute("data-consent-status")) { state.consentStatus = target.value; refreshBody("#consent-status"); }
+      if (target.dataset.gate) {
+        state[target.dataset.gate] = target.checked;
+        refreshBody(`[data-gate="${target.dataset.gate}"]`);
+        const focused = body.querySelector(`[data-gate="${target.dataset.gate}"]`);
+        if (focused) { focused.closest("details").open = true; focused.focus({ preventScroll: true }); }
+        announceDecision();
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (drawer.hidden) return;
+      if (event.key === "Escape") { event.preventDefault(); closeDrawer(); return; }
+      if (!event.altKey && !event.ctrlKey && !event.metaKey && event.target.getAttribute("role") === "tab" && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+        event.preventDefault();
+        const tabs = ["executive", "technical", "operational"], index = tabs.indexOf(state.tab);
+        state.tab = tabs[event.key === "Home" ? 0 : event.key === "End" ? 2 : (index + (event.key === "ArrowRight" ? 1 : 2)) % 3];
+        renderDrawer(); body.scrollTop = 0; document.getElementById(`tab-${state.tab}`).focus(); return;
+      }
+      if (event.altKey && state.stage && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
+        event.preventDefault(); const next = state.stage + (event.key === "ArrowRight" ? 1 : -1);
+        if (next >= 1 && next <= 6) openPanel("stage", next, state.tab);
+      }
+      if (event.key === "Tab" && drawer.getAttribute("aria-modal") === "true") {
+        const focusable = [...drawer.querySelectorAll('button:not(:disabled), input, select, summary, a[href], [tabindex="0"]')].filter(el => el.offsetParent !== null && el.getAttribute("tabindex") !== "-1");
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement.id === "drawer-title")) { event.preventDefault(); last.focus(); }
+        if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+    window.matchMedia("(max-width: 760px)").addEventListener("change", event => {
+      if (drawer.hidden) return;
+      drawer.setAttribute("role", event.matches ? "dialog" : "complementary");
+      if (event.matches) drawer.setAttribute("aria-modal", "true"); else drawer.removeAttribute("aria-modal");
+      for (const selector of [".overview", ".topbar", "footer"]) document.querySelector(selector).inert = event.matches;
+    });
+  </script>
+</body>
+</html>
